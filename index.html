@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Конфигуратор куба с отверстием, подложкой и текстом (json-only)</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --panel-bg: rgba(15, 23, 42, 0.9);
+      --card-bg: rgba(30, 41, 59, 0.72);
+      --border: rgba(148, 163, 184, 0.22);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #1e293b, var(--bg-dark));
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: relative;
+      min-width: 0;
+      height: 100vh;
+    }
+
+    .top-bar {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 10;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      max-width: calc(100% - 32px);
+    }
+
+    .badge {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      padding: 7px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+      backdrop-filter: blur(8px);
+    }
+
+    .badge strong {
+      color: var(--text-main);
+    }
+
+    .side-panel {
+      width: 390px;
+      max-width: 100vw;
+      height: 100vh;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      transition: width 0.2s ease, transform 0.2s ease;
+      z-index: 20;
+    }
+
+    .side-panel.collapsed {
+      width: 0;
+      border-left: none;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .panel-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #93c5fd;
+    }
+
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .slider-header label {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .input-pair {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    input[type="email"],
+    select {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+    }
+
+    input[type="number"] {
+      width: 72px;
+      text-align: right;
+    }
+
+    input[type="color"] {
+      width: 42px;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .segmented {
+      display: grid;
+      gap: 6px;
+    }
+
+    .segmented.two-cols {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .segmented.three-cols {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .seg-btn {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .seg-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      border-radius: 9px;
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: background 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.9);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(51, 65, 85, 0.95);
+    }
+
+    .panel-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .toggle-panel-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      z-index: 30;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      width: 440px;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .modal-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    .modal-input {
+      width: 100%;
+    }
+
+    .modal-status {
+      font-size: 12px;
+      color: #93c5fd;
+      min-height: 16px;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        overflow: auto;
+      }
+      #canvas-container {
+        height: 55vh;
+        width: 100%;
+      }
+      .side-panel {
+        width: 100%;
+        height: auto;
+        max-height: none;
+        border-left: none;
+        border-top: 1px solid var(--border);
+      }
+      .side-panel.collapsed {
+        width: 100%;
+        height: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div class="top-bar">
+      <div class="badge">Модель: <strong id="badge-dims">80 × 80 × 80 мм</strong></div>
+      <div class="badge">Текст по подложке: <strong id="badge-text-pos">X: 0.0 мм, Y: 0.0 мм</strong></div>
+      <div class="badge">Подложка: <strong id="badge-pad-info">Выключена</strong></div>
+    </div>
+    <button type="button" class="btn-secondary toggle-panel-btn" id="toggle-panel-btn">Во весь экран</button>
+  </div>
+
+  <aside class="side-panel" id="side-panel">
+    <div class="panel-header">
+      <div class="panel-title">Параметры детали (JSON + FreeCAD)</div>
+    </div>
+
+    <div class="panel-scroll">
+      <div class="section-card">
+        <div class="section-title">Геометрия и цвет</div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="length-range">Длина (X), мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="length-range" min="20" max="200" step="1" value="80" />
+            <input type="number" id="length-num" min="20" max="200" step="1" value="80" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="width-range">Ширина (Z/Y), мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="width-range" min="20" max="200" step="1" value="80" />
+            <input type="number" id="width-num" min="20" max="200" step="1" value="80" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="height-range">Высота (Y/Z), мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="height-range" min="20" max="200" step="1" value="80" />
+            <input type="number" id="height-num" min="20" max="200" step="1" value="80" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="fillet-range">Скругление углов, мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="fillet-range" min="0" max="40" step="0.5" value="12" />
+            <input type="number" id="fillet-num" min="0" max="40" step="0.5" value="12" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="slope-range">Уклон верхней грани, °</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="slope-range" min="-25" max="25" step="0.5" value="0" />
+            <input type="number" id="slope-num" min="-25" max="25" step="0.5" value="0" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header"><label>Ось уклона верха</label></div>
+          <div class="segmented two-cols" id="slope-axis-seg">
+            <button type="button" class="seg-btn active" data-val="x">По оси X</button>
+            <button type="button" class="seg-btn" data-val="z">По оси Z/Y</button>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="color-picker">Цвет модели</label>
+            <span id="color-hex-label">#2563EB</span>
+          </div>
+          <div class="input-pair">
+            <input type="color" id="color-picker" value="#2563EB" />
+            <span class="hint-text">Передаётся в JSON (<code>colorHex</code>) и применяется в FreeCAD.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">Отверстия</div>
+
+        <div class="slider-row">
+          <div class="slider-header"><label>Форма отверстия</label></div>
+          <div class="segmented two-cols" id="hole-shape-seg">
+            <button type="button" class="seg-btn active" data-val="round">Круглое</button>
+            <button type="button" class="seg-btn" data-val="rect">Прямоугольное</button>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header"><label for="hole-layout-select">Расположение</label></div>
+          <select id="hole-layout-select">
+            <option value="center">По центру (1 шт.)</option>
+            <option value="line-x">Линия по X</option>
+            <option value="line-y">Линия по Y</option>
+            <option value="grid-2x2">Сетка 2×2</option>
+            <option value="grid-2x3">Сетка 2×3</option>
+            <option value="grid-3x2">Сетка 3×2</option>
+            <option value="grid-3x3">Сетка 3×3</option>
+            <option value="grid-4x4">Сетка 4×4</option>
+          </select>
+        </div>
+
+        <div class="slider-row" id="line-count-row" style="display: none;">
+          <div class="slider-header">
+            <label for="line-count-range">Количество в линии</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="line-count-range" min="2" max="8" step="1" value="3" />
+            <input type="number" id="line-count-num" min="2" max="8" step="1" value="3" />
+          </div>
+        </div>
+
+        <div class="slider-row" id="hole-spread-row" style="display: none;">
+          <div class="slider-header">
+            <label for="hole-spread-range">Разброс группы, %</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="hole-spread-range" min="15" max="90" step="1" value="50" />
+            <input type="number" id="hole-spread-num" min="15" max="90" step="1" value="50" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header"><label>Глубина отверстия</label></div>
+          <div class="segmented two-cols" id="depth-type-seg">
+            <button type="button" class="seg-btn active" data-val="through">Сквозное</button>
+            <button type="button" class="seg-btn" data-val="blind">Глухое</button>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="size-x-range" id="size-x-label">Диаметр (X), мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="size-x-range" min="3" max="80" step="0.5" value="15" />
+            <input type="number" id="size-x-num" min="3" max="80" step="0.5" value="15" />
+          </div>
+        </div>
+
+        <div class="slider-row" id="size-y-row" style="display: none;">
+          <div class="slider-header">
+            <label for="size-y-range">Размер по Y, мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="size-y-range" min="3" max="80" step="0.5" value="15" />
+            <input type="number" id="size-y-num" min="3" max="80" step="0.5" value="15" />
+          </div>
+        </div>
+
+        <div class="slider-row" id="blind-depth-row" style="display: none;">
+          <div class="slider-header">
+            <label for="blind-depth-range">Глубина глухого, мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="blind-depth-range" min="2" max="150" step="0.5" value="20" />
+            <input type="number" id="blind-depth-num" min="2" max="150" step="0.5" value="20" />
+          </div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">Подложка и перемещение текста по ней</div>
+
+        <div class="slider-row">
+          <div class="slider-header"><label>Подложка</label></div>
+          <div class="segmented two-cols" id="pad-enabled-seg">
+            <button type="button" class="seg-btn" data-val="off">Выключена</button>
+            <button type="button" class="seg-btn active" data-val="on">Включена</button>
+          </div>
+        </div>
+
+        <div id="pad-controls-wrap" style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="pad-length-range">Длина подложки (U), мм</label>
+            </div>
+            <div class="input-pair">
+              <input type="range" id="pad-length-range" min="10" max="180" step="0.5" value="44" />
+              <input type="number" id="pad-length-num" min="10" max="180" step="0.5" value="44" />
+            </div>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="pad-width-range">Ширина подложки (V), мм</label>
+            </div>
+            <div class="input-pair">
+              <input type="range" id="pad-width-range" min="10" max="180" step="0.5" value="26" />
+              <input type="number" id="pad-width-num" min="10" max="180" step="0.5" value="26" />
+            </div>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="pad-height-range">Высота подложки, мм</label>
+            </div>
+            <div class="input-pair">
+              <input type="range" id="pad-height-range" min="0.5" max="40" step="0.5" value="6" />
+              <input type="number" id="pad-height-num" min="0.5" max="40" step="0.5" value="6" />
+            </div>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="pad-slope-range">Горизонтальный уклон подложки (slope), °</label>
+            </div>
+            <div class="input-pair">
+              <input type="range" id="pad-slope-range" min="-35" max="35" step="0.5" value="0" />
+              <input type="number" id="pad-slope-num" min="-35" max="35" step="0.5" value="0" />
+            </div>
+          </div>
+
+          <div class="slider-row">
+            <div class="slider-header">
+              <label for="pad-slope-v-range">Вертикальный уклон подложки (slopeV), °</label>
+            </div>
+            <div class="input-pair">
+              <input type="range" id="pad-slope-v-range" min="-35" max="35" step="0.5" value="0" />
+              <input type="number" id="pad-slope-v-num" min="-35" max="35" step="0.5" value="0" />
+            </div>
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header"><label for="text-input">Текст</label></div>
+          <input type="text" id="text-input" value="3D" maxlength="32" placeholder="Введите текст..." />
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header"><label>Грань размещения</label></div>
+          <div class="segmented three-cols" id="text-side-seg">
+            <button type="button" class="seg-btn active" data-val="top">Верх</button>
+            <button type="button" class="seg-btn" data-val="bottom">Низ</button>
+            <button type="button" class="seg-btn" data-val="front">Перед</button>
+            <button type="button" class="seg-btn" data-val="back">Зад</button>
+            <button type="button" class="seg-btn" data-val="left">Лево</button>
+            <button type="button" class="seg-btn" data-val="right">Право</button>
+          </div>
+        </div>
+
+        <div class="slider-header" style="margin-top: 2px;">
+          <label>Режим векторного текста</label>
+        </div>
+        <div class="segmented two-cols" id="text-mode-seg">
+          <button type="button" class="seg-btn active" data-val="out">Выдавливать (+)</button>
+          <button type="button" class="seg-btn" data-val="in">Вычитать (−)</button>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="text-size-range">Размер шрифта, мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="text-size-range" min="4" max="80" step="0.5" value="18" />
+            <input type="number" id="text-size-num" min="4" max="80" step="0.5" value="18" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="text-depth-range">Выдавливание текста (+ / −), мм</label>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="text-depth-range" min="-10" max="10" step="0.2" value="2" />
+            <input type="number" id="text-depth-num" min="-10" max="10" step="0.2" value="2" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="text-posx-range" id="text-posx-label">Смещение текста по U (X), %</label>
+            <span id="text-posx-mm-hint">0.0 мм</span>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="text-posx-range" min="-100" max="100" step="1" value="0" />
+            <input type="number" id="text-posx-num" min="-100" max="100" step="1" value="0" />
+          </div>
+        </div>
+
+        <div class="slider-row">
+          <div class="slider-header">
+            <label for="text-posy-range" id="text-posy-label">Смещение текста по V (Y), %</label>
+            <span id="text-posy-mm-hint">0.0 мм</span>
+          </div>
+          <div class="input-pair">
+            <input type="range" id="text-posy-range" min="-100" max="100" step="1" value="0" />
+            <input type="number" id="text-posy-num" min="-100" max="100" step="1" value="0" />
+          </div>
+        </div>
+
+        <div class="input-pair" style="justify-content: space-between;">
+          <span class="hint-text" id="text-proportions-hint">Факт. габариты текста: —</span>
+          <button type="button" class="btn-secondary" id="reset-text-pos-btn" style="padding: 5px 9px; font-size: 11px;">По центру</button>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title">Вид сцены</div>
+        <div class="segmented two-cols">
+          <button type="button" class="seg-btn" id="wireframe-btn">Каркас: Выкл</button>
+          <button type="button" class="seg-btn" id="autorotate-btn">Автоповорот: Выкл</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-footer" style="grid-template-columns: 1fr;">
+      <button type="button" class="btn-primary" id="export-json-btn">Скачать JSON</button>
+    </div>
+  </aside>
+</div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const state = {
+      length: 80,
+      width: 80,
+      height: 80,
+      fillet: 12,
+      topSlope: 0,
+      slopeAxis: 'x',
+      colorHex: '#2563EB',
+      text: '3D',
+      textSide: 'top',
+      textMode: 'out',
+      textSize: 18,
+      textDepth: 2,
+      textPosX: 0,
+      textPosY: 0,
+      padEnabled: true,
+      padLength: 44,
+      padWidth: 26,
+      padHeight: 6,
+      padSlope: 0,
+      padSlopeV: 0,
+      holeShape: 'round',
+      holeLayout: 'center',
+      lineCount: 3,
+      holeSpread: 50,
+      depthType: 'through',
+      sizeX: 15,
+      sizeY: 15,
+      depth: 20,
+      wireframe: false,
+      autoRotate: false
+    };
+
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    const initW = container.clientWidth || window.innerWidth;
+    const initH = container.clientHeight || Math.max(400, Math.round(window.innerHeight * 0.85));
+
+    const camera = new THREE.PerspectiveCamera(45, initW / initH, 0.1, 2000);
+    camera.position.set(130, 115, 130);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(initW, initH);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.85);
+    dirLight.position.set(140, 210, 150);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+
+    const rimLight = new THREE.DirectionalLight(0x93c5fd, 0.35);
+    rimLight.position.set(-140, -90, -120);
+    scene.add(rimLight);
+
+    const gridHelper = new THREE.GridHelper(300, 30, 0x334155, 0x1e293b);
+    scene.add(gridHelper);
+
+    const axesHelper = new THREE.AxesHelper(60);
+    scene.add(axesHelper);
+
+    let isDragging = false;
+    let prevMouse = { x: 0, y: 0 };
+    const spherical = new THREE.Spherical().setFromVector3(camera.position);
+    const target = new THREE.Vector3(0, 35, 0);
+
+    function updateCameraFromSpherical() {
+      const pos = new THREE.Vector3().setFromSpherical(spherical).add(target);
+      camera.position.copy(pos);
+      camera.lookAt(target);
+    }
+
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      prevMouse = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('pointerup', () => {
+      isDragging = false;
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - prevMouse.x;
+      const dy = e.clientY - prevMouse.y;
+      prevMouse = { x: e.clientX, y: e.clientY };
+      spherical.theta -= dx * 0.008;
+      spherical.phi = Math.max(0.12, Math.min(Math.PI - 0.12, spherical.phi - dy * 0.008));
+      updateCameraFromSpherical();
+    });
+
+    renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      spherical.radius = Math.max(45, Math.min(550, spherical.radius + e.deltaY * 0.15));
+      updateCameraFromSpherical();
+    }, { passive: false });
+
+    function enforceConstraints() {
+      const minDim = Math.min(state.length, state.width, state.height);
+      const maxFillet = Math.max(0, Math.min(40, minDim * 0.45));
+      if (state.fillet > maxFillet) {
+        state.fillet = Number(maxFillet.toFixed(1));
+      }
+
+      const maxHole = Math.max(3, Math.min(state.length, state.width) * 0.75);
+      if (state.sizeX > maxHole) state.sizeX = Number(maxHole.toFixed(1));
+      if (state.sizeY > maxHole) state.sizeY = Number(maxHole.toFixed(1));
+
+      if (state.padEnabled) {
+        const basis = getFaceBasisAndCenter();
+        state.padLength = Math.max(6, Math.min(state.padLength, basis.spanU * 0.96));
+        state.padWidth = Math.max(6, Math.min(state.padWidth, basis.spanV * 0.96));
+      }
+
+      state.textPosX = Math.max(-100, Math.min(100, state.textPosX));
+      state.textPosY = Math.max(-100, Math.min(100, state.textPosY));
+    }
+
+    function createRoundedRectShape(L, W, r) {
+      const hw = L / 2;
+      const hh = W / 2;
+      const rad = Math.max(0, Math.min(r, hw - 0.2, hh - 0.2));
+      const shape = new THREE.Shape();
+      if (rad <= 0.01) {
+        shape.moveTo(-hw, -hh);
+        shape.lineTo(hw, -hh);
+        shape.lineTo(hw, hh);
+        shape.lineTo(-hw, hh);
+        shape.closePath();
+        return shape;
+      }
+      shape.moveTo(-hw + rad, -hh);
+      shape.lineTo(hw - rad, -hh);
+      shape.quadraticCurveTo(hw, -hh, hw, -hh + rad);
+      shape.lineTo(hw, hh - rad);
+      shape.quadraticCurveTo(hw, hh, hw - rad, hh);
+      shape.lineTo(-hw + rad, hh);
+      shape.quadraticCurveTo(-hw, hh, -hw, hh - rad);
+      shape.lineTo(-hw, -hh + rad);
+      shape.quadraticCurveTo(-hw, -hh, -hw + rad, -hh);
+      return shape;
+    }
+
+    function getHoleCenters() {
+      const L = state.length;
+      const W = state.width;
+      const spread = state.holeSpread / 100;
+      const count = Math.max(2, Math.round(state.lineCount));
+
+      if (state.holeLayout === 'line-x') {
+        const span = Math.max(6, L * 0.75 * spread);
+        const step = count > 1 ? span / (count - 1) : 0;
+        return Array.from({ length: count }, (_, i) => ({ x: -span / 2 + i * step, y: 0 }));
+      }
+      if (state.holeLayout === 'line-y') {
+        const span = Math.max(6, W * 0.75 * spread);
+        const step = count > 1 ? span / (count - 1) : 0;
+        return Array.from({ length: count }, (_, i) => ({ x: 0, y: -span / 2 + i * step }));
+      }
+
+      const grids = {
+        'grid-2x2': [2, 2],
+        'grid-2x3': [2, 3],
+        'grid-3x2': [3, 2],
+        'grid-3x3': [3, 3],
+        'grid-4x4': [4, 4]
+      };
+      if (grids[state.holeLayout]) {
+        const [rows, cols] = grids[state.holeLayout];
+        const spanX = Math.max(8, L * 0.7 * spread);
+        const spanY = Math.max(8, W * 0.7 * spread);
+        const stepX = cols > 1 ? spanX / (cols - 1) : 0;
+        const stepY = rows > 1 ? spanY / (rows - 1) : 0;
+        const pts = [];
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            pts.push({ x: -spanX / 2 + c * stepX, y: -spanY / 2 + r * stepY });
+          }
+        }
+        return pts;
+      }
+
+      return [{ x: 0, y: 0 }];
+    }
+
+    function getEffectiveSlopeParams() {
+      return {
+        slopeDeg: state.topSlope,
+        axis: state.slopeAxis,
+        tanVal: Math.tan(THREE.MathUtils.degToRad(state.topSlope)),
+        minTopY: Math.max(4, state.height - Math.max(state.length, state.width) * 0.5 * Math.abs(Math.tan(THREE.MathUtils.degToRad(state.topSlope))))
+      };
+    }
+
+    function applyModelSlopeToPoint(x, y, z, slopeInfo) {
+      if (!slopeInfo || Math.abs(slopeInfo.slopeDeg) < 0.001 || state.height < 0.1) return y;
+      const ratioY = Math.max(0, Math.min(1, y / state.height));
+      const coord = slopeInfo.axis === 'x' ? x : z;
+      return y + coord * slopeInfo.tanVal * ratioY;
+    }
+
+    // Three.js scene axes: X = length, Y = height (up), Z = width
+    function getFaceBasisAndCenter() {
+      const L = state.length;
+      const W = state.width;
+      const H = state.height;
+
+      switch (state.textSide) {
+        case 'bottom':
+          return {
+            faceCenter: [0, 0, 0],
+            uAxis: [1, 0, 0],
+            vAxis: [0, 0, 1],
+            nAxis: [0, -1, 0],
+            spanU: L,
+            spanV: W,
+            uLabel: 'X',
+            vLabel: 'Z'
+          };
+        case 'front':
+          return {
+            faceCenter: [0, H * 0.5, W * 0.5],
+            uAxis: [1, 0, 0],
+            vAxis: [0, 1, 0],
+            nAxis: [0, 0, 1],
+            spanU: L,
+            spanV: H,
+            uLabel: 'X',
+            vLabel: 'Y'
+          };
+        case 'back':
+          return {
+            faceCenter: [0, H * 0.5, -W * 0.5],
+            uAxis: [-1, 0, 0],
+            vAxis: [0, 1, 0],
+            nAxis: [0, 0, -1],
+            spanU: L,
+            spanV: H,
+            uLabel: 'X',
+            vLabel: 'Y'
+          };
+        case 'right':
+          return {
+            faceCenter: [L * 0.5, H * 0.5, 0],
+            uAxis: [0, 0, 1],
+            vAxis: [0, 1, 0],
+            nAxis: [1, 0, 0],
+            spanU: W,
+            spanV: H,
+            uLabel: 'Z',
+            vLabel: 'Y'
+          };
+        case 'left':
+          return {
+            faceCenter: [-L * 0.5, H * 0.5, 0],
+            uAxis: [0, 0, -1],
+            vAxis: [0, 1, 0],
+            nAxis: [-1, 0, 0],
+            spanU: W,
+            spanV: H,
+            uLabel: 'Z',
+            vLabel: 'Y'
+          };
+        case 'top':
+        default:
+          return {
+            faceCenter: [0, H, 0],
+            uAxis: [1, 0, 0],
+            vAxis: [0, 0, 1],
+            nAxis: [0, 1, 0],
+            spanU: L,
+            spanV: W,
+            uLabel: 'X',
+            vLabel: 'Z'
+          };
+      }
+    }
+
+    function traceSmoothTextShapes() {
+      const rawText = (state.text || '').trim();
+      if (!rawText) return null;
+
+      const fontSize = Math.max(4, state.textSize);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const pxScale = 8;
+      const fontPx = fontSize * pxScale;
+      ctx.font = `700 ${fontPx}px Arial, "DejaVu Sans", sans-serif`;
+      const metrics = ctx.measureText(rawText);
+      const textW = Math.max(fontSize * 0.5, (metrics.width || fontSize * rawText.length * 0.6) / pxScale);
+      const textH = fontSize * 0.92;
+
+      const cols = Math.max(12, Math.min(220, Math.ceil(textW * 3.5)));
+      const rows = Math.max(8, Math.min(120, Math.ceil(textH * 3.5)));
+
+      canvas.width = cols;
+      canvas.height = rows;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, cols, rows);
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `700 ${Math.max(6, Math.round(rows * 0.72))}px Arial, "DejaVu Sans", sans-serif`;
+      ctx.fillText(rawText, cols * 0.5, rows * 0.52);
+
+      const img = ctx.getImageData(0, 0, cols, rows).data;
+      const shapes = [];
+      const cellW = textW / cols;
+      const cellH = textH / rows;
+
+      for (let r = 0; r < rows; r++) {
+        let startC = -1;
+        for (let c = 0; c <= cols; c++) {
+          const active = c < cols && img[(r * cols + c) * 4] > 110;
+          if (active && startC === -1) {
+            startC = c;
+          } else if (!active && startC !== -1) {
+            const x0 = -textW * 0.5 + startC * cellW;
+            const x1 = -textW * 0.5 + c * cellW;
+            const y1 = textH * 0.5 - r * cellH;
+            const y0 = textH * 0.5 - (r + 1) * cellH;
+            const rectShape = new THREE.Shape();
+            rectShape.moveTo(x0, y0);
+            rectShape.lineTo(x1, y0);
+            rectShape.lineTo(x1, y1);
+            rectShape.lineTo(x0, y1);
+            rectShape.closePath();
+            shapes.push(rectShape);
+            startC = -1;
+          }
+        }
+      }
+
+      if (!shapes.length) return null;
+      return { shapes, textW, textH };
+    }
+
+    function computeTextPositionMetrics(basis, textW, textH) {
+      const hasPad = !!state.padEnabled;
+      const containerU = hasPad ? state.padLength : basis.spanU;
+      const containerV = hasPad ? state.padWidth : basis.spanV;
+
+      const maxOffsetU = Math.max(0, (containerU - textW) * 0.5 - 0.5);
+      const maxOffsetV = Math.max(0, (containerV - textH) * 0.5 - 0.5);
+
+      const textRelOffsetU = (state.textPosX / 100) * maxOffsetU;
+      const textRelOffsetV = (state.textPosY / 100) * maxOffsetV;
+
+      const padOffsetU = 0;
+      const padOffsetV = 0;
+      const totalOffsetU = padOffsetU + textRelOffsetU;
+      const totalOffsetV = padOffsetV + textRelOffsetV;
+
+      const aspectRatio = textH > 1e-4 ? Number((textW / textH).toFixed(3)) : 1;
+      const widthPctOfContainer = containerU > 1e-4 ? Number(((textW / containerU) * 100).toFixed(1)) : 0;
+      const heightPctOfContainer = containerV > 1e-4 ? Number(((textH / containerV) * 100).toFixed(1)) : 0;
+
+      return {
+        hasPad,
+        containerU,
+        containerV,
+        maxOffsetU: Number(maxOffsetU.toFixed(2)),
+        maxOffsetV: Number(maxOffsetV.toFixed(2)),
+        padOffsetU: Number(padOffsetU.toFixed(2)),
+        padOffsetV: Number(padOffsetV.toFixed(2)),
+        textRelOffsetU: Number(textRelOffsetU.toFixed(2)),
+        textRelOffsetV: Number(textRelOffsetV.toFixed(2)),
+        offsetU: Number(totalOffsetU.toFixed(2)),
+        offsetV: Number(totalOffsetV.toFixed(2)),
+        textWidthMm: Number(textW.toFixed(2)),
+        textHeightMm: Number(textH.toFixed(2)),
+        aspectRatio,
+        widthPctOfContainer,
+        heightPctOfContainer
+      };
+    }
+
+    function getTextOffsets(basis, textW, textH) {
+      const m = computeTextPositionMetrics(basis, textW, textH);
+      return {
+        offsetU: m.offsetU,
+        offsetV: m.offsetV,
+        padOffsetU: m.padOffsetU,
+        padOffsetV: m.padOffsetV,
+        textRelOffsetU: m.textRelOffsetU,
+        textRelOffsetV: m.textRelOffsetV
+      };
+    }
+
+    function getPadOuterHeightAtUV(uLocal, vLocal) {
+      const padH = Math.max(0.5, state.padHeight);
+      const tanU = Math.tan(THREE.MathUtils.degToRad(state.padSlope));
+      const tanV = Math.tan(THREE.MathUtils.degToRad(state.padSlopeV));
+      return Math.max(0.5, padH + uLocal * tanU + vLocal * tanV);
+    }
+
+    function evalFacePoint(u, v, nDist, basis, offsetU, offsetV, slopeInfo) {
+      const fc = basis.faceCenter;
+      const ua = basis.uAxis;
+      const va = basis.vAxis;
+      const na = basis.nAxis;
+      const px = fc[0] + ua[0] * (u + offsetU) + va[0] * (v + offsetV) + na[0] * nDist;
+      let py = fc[1] + ua[1] * (u + offsetU) + va[1] * (v + offsetV) + na[1] * nDist;
+      const pz = fc[2] + ua[2] * (u + offsetU) + va[2] * (v + offsetV) + na[2] * nDist;
+      py = applyModelSlopeToPoint(px, py, pz, slopeInfo);
+      return [px, py, pz];
+    }
+
+    function pushQuad(arr, a, b, c, d) {
+      arr.push(
+        a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2],
+        a[0], a[1], a[2], c[0], c[1], c[2], d[0], d[1], d[2]
+      );
+    }
+
+    function compileTextHitPolygons(textData) {
+      if (!textData || !textData.shapes) return [];
+      const polys = [];
+      for (const sh of textData.shapes) {
+        const pts = sh.getPoints(6);
+        if (!pts || pts.length < 3) continue;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const p of pts) {
+          if (p.x < minX) minX = p.x;
+          if (p.x > maxX) maxX = p.x;
+          if (p.y < minY) minY = p.y;
+          if (p.y > maxY) maxY = p.y;
+        }
+        polys.push({ pts, minX, maxX, minY, maxY });
+      }
+      return polys;
+    }
+
+    function isPointInCompiledPolys(x, y, polys) {
+      for (let k = 0; k < polys.length; k++) {
+        const poly = polys[k];
+        if (x < poly.minX || x > poly.maxX || y < poly.minY || y > poly.maxY) continue;
+        const pts = poly.pts;
+        let inside = false;
+        for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+          const xi = pts[i].x, yi = pts[i].y;
+          const xj = pts[j].x, yj = pts[j].y;
+          const intersect = ((yi > y) !== (yj > y)) &&
+            (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-9) + xi);
+          if (intersect) inside = !inside;
+        }
+        if (inside) return true;
+      }
+      return false;
+    }
+
+    function buildPadGeometry(slopeInfo) {
+      if (!state.padEnabled) return null;
+
+      const basis = getFaceBasisAndCenter();
+      const textData = traceSmoothTextShapes();
+      const textW = textData ? textData.textW : state.textSize;
+      const textH = textData ? textData.textH : state.textSize;
+      const offsets = getTextOffsets(basis, textW, textH);
+      const offsetU = offsets.padOffsetU;
+      const offsetV = offsets.padOffsetV;
+
+      const padL = state.padLength;
+      const padW = state.padWidth;
+      const isSubtracted = !!(textData && state.textDepth < -0.01);
+      const recessDepth = Math.abs(state.textDepth);
+      const isTilted = Math.abs(state.padSlope) > 0.05 || Math.abs(state.padSlopeV) > 0.05;
+
+      const segU = isSubtracted
+        ? Math.min(96, Math.max(40, Math.round(padL * 0.9)))
+        : (isTilted ? Math.min(64, Math.max(28, Math.round(padL * 0.7))) : 24);
+      const segV = isSubtracted
+        ? Math.min(72, Math.max(32, Math.round(padW * 0.9)))
+        : (isTilted ? Math.min(48, Math.max(20, Math.round(padW * 0.7))) : 18);
+
+      const lenU = padL / segU;
+      const lenV = padW / segV;
+      const baseN = -0.8;
+      const verts = [];
+
+      const topHeights = Array.from({ length: segU + 1 }, () => new Float32Array(segV + 1));
+      for (let iu = 0; iu <= segU; iu++) {
+        const uCorner = -padL * 0.5 + iu * lenU;
+        for (let iv = 0; iv <= segV; iv++) {
+          const vCorner = -padW * 0.5 + iv * lenV;
+          topHeights[iu][iv] = Math.max(baseN + 0.05, getPadOuterHeightAtUV(uCorner, vCorner));
+        }
+      }
+
+      const hitGrid = Array.from({ length: segU }, () => new Uint8Array(segV));
+      if (isSubtracted) {
+        const polys = compileTextHitPolygons(textData);
+        for (let iu = 0; iu < segU; iu++) {
+          const u0 = -padL * 0.5 + iu * lenU;
+          const u1 = u0 + lenU;
+          const uMid = (u0 + u1) * 0.5;
+          for (let iv = 0; iv < segV; iv++) {
+            const v0 = -padW * 0.5 + iv * lenV;
+            const v1 = v0 + lenV;
+            const vMid = (v0 + v1) * 0.5;
+            const hit =
+              isPointInCompiledPolys(uMid, vMid, polys) ||
+              isPointInCompiledPolys(u0 + lenU * 0.25, v0 + lenV * 0.25, polys) ||
+              isPointInCompiledPolys(u1 - lenU * 0.25, v0 + lenV * 0.25, polys) ||
+              isPointInCompiledPolys(u1 - lenU * 0.25, v1 - lenV * 0.25, polys) ||
+              isPointInCompiledPolys(u0 + lenU * 0.25, v1 - lenV * 0.25, polys);
+            hitGrid[iu][iv] = hit ? 1 : 0;
+          }
+        }
+      }
+
+      for (let iu = 0; iu < segU; iu++) {
+        const u0 = -padL * 0.5 + iu * lenU;
+        const u1 = u0 + lenU;
+        const uMid = (u0 + u1) * 0.5;
+
+        for (let iv = 0; iv < segV; iv++) {
+          const v0 = -padW * 0.5 + iv * lenV;
+          const v1 = v0 + lenV;
+          const vMid = (v0 + v1) * 0.5;
+
+          const h00 = topHeights[iu][iv];
+          const h10 = topHeights[iu + 1][iv];
+          const h11 = topHeights[iu + 1][iv + 1];
+          const h01 = topHeights[iu][iv + 1];
+
+          const b00 = evalFacePoint(u0, v0, baseN, basis, offsetU, offsetV, slopeInfo);
+          const b10 = evalFacePoint(u1, v0, baseN, basis, offsetU, offsetV, slopeInfo);
+          const b11 = evalFacePoint(u1, v1, baseN, basis, offsetU, offsetV, slopeInfo);
+          const b01 = evalFacePoint(u0, v1, baseN, basis, offsetU, offsetV, slopeInfo);
+          pushQuad(verts, b01, b11, b10, b00);
+
+          const cellHit = hitGrid[iu][iv] === 1;
+          const cellOuter = getPadOuterHeightAtUV(uMid, vMid);
+          const floorN = Math.max(baseN + 0.15, cellOuter - recessDepth);
+
+          if (!cellHit) {
+            const t00 = evalFacePoint(u0, v0, h00, basis, offsetU, offsetV, slopeInfo);
+            const t10 = evalFacePoint(u1, v0, h10, basis, offsetU, offsetV, slopeInfo);
+            const t11 = evalFacePoint(u1, v1, h11, basis, offsetU, offsetV, slopeInfo);
+            const t01 = evalFacePoint(u0, v1, h01, basis, offsetU, offsetV, slopeInfo);
+            pushQuad(verts, t00, t10, t11, t01);
+
+            if (iv === 0) pushQuad(verts, b00, b10, t10, t00);
+            if (iv === segV - 1) pushQuad(verts, b11, b01, t01, t11);
+            if (iu === 0) pushQuad(verts, b01, b00, t00, t01);
+            if (iu === segU - 1) pushQuad(verts, b10, b11, t11, t10);
+
+            if (isSubtracted) {
+              const w00 = evalFacePoint(u0, v0, floorN, basis, offsetU, offsetV, slopeInfo);
+              const w10 = evalFacePoint(u1, v0, floorN, basis, offsetU, offsetV, slopeInfo);
+              const w11 = evalFacePoint(u1, v1, floorN, basis, offsetU, offsetV, slopeInfo);
+              const w01 = evalFacePoint(u0, v1, floorN, basis, offsetU, offsetV, slopeInfo);
+
+              if (iv > 0 && hitGrid[iu][iv - 1] === 1) pushQuad(verts, w00, w10, t10, t00);
+              if (iv < segV - 1 && hitGrid[iu][iv + 1] === 1) pushQuad(verts, w11, w01, t01, t11);
+              if (iu > 0 && hitGrid[iu - 1][iv] === 1) pushQuad(verts, w01, w00, t00, t01);
+              if (iu < segU - 1 && hitGrid[iu + 1][iv] === 1) pushQuad(verts, w10, w11, t11, t10);
+            }
+          } else {
+            const f00 = evalFacePoint(u0, v0, floorN, basis, offsetU, offsetV, slopeInfo);
+            const f10 = evalFacePoint(u1, v0, floorN, basis, offsetU, offsetV, slopeInfo);
+            const f11 = evalFacePoint(u1, v1, floorN, basis, offsetU, offsetV, slopeInfo);
+            const f01 = evalFacePoint(u0, v1, floorN, basis, offsetU, offsetV, slopeInfo);
+            pushQuad(verts, f00, f10, f11, f01);
+          }
+        }
+      }
+
+      if (verts.length === 0) return null;
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    function buildTextGeometry(slopeInfo) {
+      const textData = traceSmoothTextShapes();
+      if (!textData) return null;
+
+      const basis = getFaceBasisAndCenter();
+      const { offsetU, offsetV, textRelOffsetU, textRelOffsetV } = getTextOffsets(basis, textData.textW, textData.textH);
+      const extrudeVal = state.textDepth;
+      if (Math.abs(extrudeVal) < 0.01) return null;
+
+      const hasPad = !!state.padEnabled;
+      if (hasPad && extrudeVal < 0) return null;
+
+      const depthAbs = Math.max(0.2, Math.abs(extrudeVal));
+      const extrudeGeo = new THREE.ExtrudeGeometry(textData.shapes, {
+        depth: depthAbs,
+        bevelEnabled: false,
+        curveSegments: 24
+      });
+
+      const nonIdx = extrudeGeo.index ? extrudeGeo.toNonIndexed() : extrudeGeo;
+      if (nonIdx !== extrudeGeo) extrudeGeo.dispose();
+
+      const pos = nonIdx.attributes.position;
+      const outVerts = new Float32Array(pos.count * 3);
+
+      for (let i = 0; i < pos.count; i++) {
+        const localU = pos.getX(i);
+        const localV = pos.getY(i);
+        const zRaw = pos.getZ(i);
+        const tNorm = Math.max(0, Math.min(1, zRaw / depthAbs));
+
+        let nDist;
+        if (extrudeVal > 0) {
+          const surfaceN = hasPad ? getPadOuterHeightAtUV(localU + textRelOffsetU, localV + textRelOffsetV) : 0;
+          const nStart = hasPad ? surfaceN - 0.08 : -0.15;
+          const nEnd = surfaceN + extrudeVal;
+          nDist = nStart + tNorm * (nEnd - nStart);
+        } else {
+          const pocketDepth = Math.min(depthAbs * 0.25, 0.8);
+          const nFloor = -pocketDepth;
+          const nTop = 0.05;
+          nDist = nFloor + tNorm * (nTop - nFloor);
+        }
+
+        const [px, py, pz] = evalFacePoint(localU, localV, nDist, basis, offsetU, offsetV, slopeInfo);
+        outVerts[i * 3] = px;
+        outVerts[i * 3 + 1] = py;
+        outVerts[i * 3 + 2] = pz;
+      }
+
+      nonIdx.dispose();
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(outVerts, 3));
+      geo.computeVertexNormals();
+      return geo;
+    }
+
+    function mergeNonIndexedGeometries(geometries) {
+      let totalVerts = 0;
+      const prepared = [];
+      for (const g of geometries) {
+        if (!g) continue;
+        const ni = g.index ? g.toNonIndexed() : g;
+        const pos = ni.attributes.position;
+        if (!pos || pos.count === 0) continue;
+        prepared.push(ni);
+        totalVerts += pos.count;
+      }
+      const mergedPos = new Float32Array(totalVerts * 3);
+      let ptr = 0;
+      for (const ni of prepared) {
+        const pos = ni.attributes.position;
+        mergedPos.set(pos.array, ptr);
+        ptr += pos.array.length;
+      }
+      const out = new THREE.BufferGeometry();
+      out.setAttribute('position', new THREE.BufferAttribute(mergedPos, 3));
+      out.computeVertexNormals();
+      return out;
+    }
+
+    let currentMesh = null;
+    let padMesh = null;
+    let textMesh = null;
+
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(state.colorHex),
+      roughness: 0.42,
+      metalness: 0.12
+    });
+
+    const padMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(state.colorHex).lerp(new THREE.Color(0xffffff), 0.14),
+      roughness: 0.38,
+      metalness: 0.14
+    });
+
+    const textOutMaterial = new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      roughness: 0.35,
+      metalness: 0.2
+    });
+
+    const textInMaterial = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8,
+      roughness: 0.5,
+      metalness: 0.1
+    });
+
+    function updateBadgesAndHints() {
+      const basis = getFaceBasisAndCenter();
+      const textData = traceSmoothTextShapes();
+      const textW = textData ? textData.textW : state.textSize;
+      const textH = textData ? textData.textH : state.textSize;
+      const metrics = computeTextPositionMetrics(basis, textW, textH);
+
+      document.getElementById('badge-dims').textContent =
+        `${state.length} × ${state.width} × ${state.height} мм`;
+      document.getElementById('badge-text-pos').textContent =
+        `X: ${metrics.offsetU >= 0 ? '+' : ''}${metrics.offsetU} мм, Y: ${metrics.offsetV >= 0 ? '+' : ''}${metrics.offsetV} мм`;
+      document.getElementById('badge-pad-info').textContent = state.padEnabled
+        ? `${state.padLength}×${state.padWidth}×${state.padHeight} мм (∠${state.padSlope}° / ∠${state.padSlopeV}°)`
+        : 'Выключена';
+
+      document.getElementById('text-posx-label').textContent =
+        `Смещение текста по ${basis.uLabel} (U), %`;
+      document.getElementById('text-posy-label').textContent =
+        `Смещение текста по ${basis.vLabel} (V), %`;
+
+      document.getElementById('text-posx-mm-hint').textContent =
+        `${metrics.offsetU >= 0 ? '+' : ''}${metrics.offsetU} мм`;
+      document.getElementById('text-posy-mm-hint').textContent =
+        `${metrics.offsetV >= 0 ? '+' : ''}${metrics.offsetV} мм`;
+
+      document.getElementById('text-proportions-hint').textContent =
+        `Текст: ${metrics.textWidthMm}×${metrics.textHeightMm} мм (пропорция ${metrics.aspectRatio}:1, в зоне: ${metrics.widthPctOfContainer}%×${metrics.heightPctOfContainer}%)`;
+
+      document.getElementById('color-hex-label').textContent = state.colorHex.toUpperCase();
+    }
+
+    function rebuildModel() {
+      enforceConstraints();
+
+      if (currentMesh) {
+        if (currentMesh.userData.extraMeshes) {
+          for (const em of currentMesh.userData.extraMeshes) {
+            scene.remove(em);
+            em.geometry.dispose();
+          }
+        }
+        scene.remove(currentMesh);
+        currentMesh.geometry.dispose();
+      }
+      if (padMesh) {
+        scene.remove(padMesh);
+        padMesh.geometry.dispose();
+        padMesh = null;
+      }
+      if (textMesh) {
+        scene.remove(textMesh);
+        textMesh.geometry.dispose();
+        textMesh = null;
+      }
+
+      const L = state.length;
+      const W = state.width;
+      const H = state.height;
+      const f = state.fillet;
+      const isRound = state.holeShape === 'round';
+      const isThrough = state.depthType === 'through';
+      const slopeInfo = getEffectiveSlopeParams();
+      const depth = isThrough ? H : Math.min(slopeInfo.minTopY - 1.5, state.depth);
+
+      const shapeWithHoles = createRoundedRectShape(L, W, f);
+      const centers = getHoleCenters();
+
+      for (const pt of centers) {
+        const holePath = new THREE.Path();
+        const hx = state.sizeX;
+        const hy = isRound ? hx : state.sizeY;
+
+        if (isRound) {
+          holePath.absarc(pt.x, pt.y, hx / 2, 0, Math.PI * 2, true);
+        } else {
+          const hsX = hx / 2;
+          const hsY = hy / 2;
+          holePath.moveTo(pt.x - hsX, pt.y - hsY);
+          holePath.lineTo(pt.x - hsX, pt.y + hsY);
+          holePath.lineTo(pt.x + hsX, pt.y + hsY);
+          holePath.lineTo(pt.x + hsX, pt.y - hsY);
+          holePath.closePath();
+        }
+        shapeWithHoles.holes.push(holePath);
+      }
+
+      let finalGeometry = null;
+      if (isThrough || depth >= H - 1) {
+        const extrudeSettings = { depth: H, bevelEnabled: false, steps: 1, curveSegments: 32 };
+        const geometry = new THREE.ExtrudeGeometry(shapeWithHoles, extrudeSettings);
+        geometry.rotateX(-Math.PI / 2);
+        geometry.computeBoundingBox();
+        geometry.translate(0, -geometry.boundingBox.min.y, 0);
+        finalGeometry = geometry.index ? geometry.toNonIndexed() : geometry;
+        if (finalGeometry !== geometry) geometry.dispose();
+        finalGeometry.computeVertexNormals();
+      } else {
+        const bottomHeight = Math.max(1.5, H - depth);
+        const topHeight = H - bottomHeight;
+
+        const baseShape = createRoundedRectShape(L, W, f);
+        const baseGeo = new THREE.ExtrudeGeometry(baseShape, {
+          depth: bottomHeight,
+          bevelEnabled: false,
+          steps: 1,
+          curveSegments: 32
+        });
+        baseGeo.rotateX(-Math.PI / 2);
+        baseGeo.computeBoundingBox();
+        baseGeo.translate(0, -baseGeo.boundingBox.min.y, 0);
+
+        const topGeo = new THREE.ExtrudeGeometry(shapeWithHoles, {
+          depth: topHeight,
+          bevelEnabled: false,
+          steps: 1,
+          curveSegments: 32
+        });
+        topGeo.rotateX(-Math.PI / 2);
+        topGeo.computeBoundingBox();
+        topGeo.translate(0, bottomHeight - topGeo.boundingBox.min.y, 0);
+
+        finalGeometry = mergeNonIndexedGeometries([baseGeo, topGeo]);
+        baseGeo.dispose();
+        topGeo.dispose();
+      }
+
+      if (Math.abs(slopeInfo.slopeDeg) > 0.001) {
+        const pos = finalGeometry.attributes.position;
+        for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i);
+          const y = pos.getY(i);
+          const z = pos.getZ(i);
+          pos.setY(i, applyModelSlopeToPoint(x, y, z, slopeInfo));
+        }
+        pos.needsUpdate = true;
+        finalGeometry.computeVertexNormals();
+      }
+
+      bodyMaterial.color.set(state.colorHex);
+      bodyMaterial.wireframe = state.wireframe;
+
+      currentMesh = new THREE.Mesh(finalGeometry, bodyMaterial);
+      currentMesh.castShadow = true;
+      currentMesh.receiveShadow = true;
+      currentMesh.userData.extraMeshes = [];
+      scene.add(currentMesh);
+
+      const pGeo = buildPadGeometry(null);
+      if (pGeo) {
+        padMaterial.color.set(state.colorHex).lerp(new THREE.Color(0xffffff), 0.14);
+        padMaterial.wireframe = state.wireframe;
+        padMesh = new THREE.Mesh(pGeo, padMaterial);
+        padMesh.castShadow = true;
+        padMesh.receiveShadow = true;
+        scene.add(padMesh);
+      }
+
+      const tGeo = buildTextGeometry(null);
+      if (tGeo) {
+        const mat = state.textDepth < -0.01 ? textInMaterial : textOutMaterial;
+        mat.wireframe = state.wireframe;
+        textMesh = new THREE.Mesh(tGeo, mat);
+        textMesh.castShadow = true;
+        textMesh.receiveShadow = true;
+        scene.add(textMesh);
+      }
+
+      updateBadgesAndHints();
+    }
+
+    function getFullConfigData() {
+      const isRound = state.holeShape === 'round';
+      const hx = state.sizeX;
+      const hy = isRound ? hx : state.sizeY;
+      const basis = getFaceBasisAndCenter();
+      const textData = traceSmoothTextShapes();
+      const textW = textData ? textData.textW : state.textSize;
+      const textH = textData ? textData.textH : state.textSize;
+      const posMetrics = computeTextPositionMetrics(basis, textW, textH);
+
+      return {
+        format: '3d-cube-configurator-params-v2',
+        units: 'mm',
+        colorHex: state.colorHex,
+        geometry: {
+          length: state.length,
+          width: state.width,
+          height: state.height,
+          fillet: state.fillet,
+          topSlope: state.topSlope,
+          slopeAxis: state.slopeAxis
+        },
+        holes: {
+          shape: state.holeShape,
+          layout: state.holeLayout,
+          lineCount: state.lineCount,
+          spread: state.holeSpread,
+          depthType: state.depthType,
+          sizeX: hx,
+          sizeY: hy,
+          depth: state.depth,
+          centers: getHoleCenters()
+        },
+        text: {
+          content: state.text,
+          mode: state.textDepth < -0.01 ? 'subtract' : 'extrude',
+          action: state.textDepth < -0.01 ? 'вычитать' : 'выдавливать',
+          side: state.textSide,
+          size: state.textSize,
+          depth: state.textDepth,
+          posX: state.textPosX,
+          posY: state.textPosY,
+          placementReference: posMetrics.hasPad ? 'pad' : 'face',
+          padOffsetU: posMetrics.padOffsetU,
+          padOffsetV: posMetrics.padOffsetV,
+          textRelOffsetU: posMetrics.textRelOffsetU,
+          textRelOffsetV: posMetrics.textRelOffsetV,
+          offsetU: posMetrics.offsetU,
+          offsetV: posMetrics.offsetV,
+          maxOffsetU: posMetrics.maxOffsetU,
+          maxOffsetV: posMetrics.maxOffsetV,
+          proportions: {
+            fontSizeMm: state.textSize,
+            widthMm: posMetrics.textWidthMm,
+            heightMm: posMetrics.textHeightMm,
+            aspectRatio: posMetrics.aspectRatio,
+            containerLengthMm: posMetrics.containerU,
+            containerWidthMm: posMetrics.containerV,
+            widthPercentOfContainer: posMetrics.widthPctOfContainer,
+            heightPercentOfContainer: posMetrics.heightPctOfContainer
+          }
+        },
+        pad: {
+          enabled: state.padEnabled,
+          length: state.padLength,
+          width: state.padWidth,
+          height: state.padHeight,
+          slope: state.padSlope,
+          slopeV: state.padSlopeV
+        }
+      };
+    }
+
+    function downloadJSON() {
+      const payload = getFullConfigData();
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cube_${state.length}x${state.width}x${state.height}_params.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    function bindSliderAndNumber(rangeId, numId, stateKey, isInt = false) {
+      const rEl = document.getElementById(rangeId);
+      const nEl = document.getElementById(numId);
+      if (!rEl || !nEl) return;
+
+      const applyVal = (raw) => {
+        const parsed = isInt ? parseInt(raw, 10) : parseFloat(raw);
+        if (Number.isNaN(parsed)) return;
+        state[stateKey] = parsed;
+        rebuildModel();
+        rEl.value = state[stateKey];
+        nEl.value = state[stateKey];
+      };
+
+      rEl.addEventListener('input', () => applyVal(rEl.value));
+      nEl.addEventListener('change', () => applyVal(nEl.value));
+    }
+
+    bindSliderAndNumber('length-range', 'length-num', 'length', false);
+    bindSliderAndNumber('width-range', 'width-num', 'width', false);
+    bindSliderAndNumber('height-range', 'height-num', 'height', false);
+    bindSliderAndNumber('fillet-range', 'fillet-num', 'fillet', false);
+    bindSliderAndNumber('slope-range', 'slope-num', 'topSlope', false);
+    bindSliderAndNumber('line-count-range', 'line-count-num', 'lineCount', true);
+    bindSliderAndNumber('hole-spread-range', 'hole-spread-num', 'holeSpread', false);
+    bindSliderAndNumber('size-x-range', 'size-x-num', 'sizeX', false);
+    bindSliderAndNumber('size-y-range', 'size-y-num', 'sizeY', false);
+    bindSliderAndNumber('blind-depth-range', 'blind-depth-num', 'depth', false);
+
+    bindSliderAndNumber('pad-length-range', 'pad-length-num', 'padLength', false);
+    bindSliderAndNumber('pad-width-range', 'pad-width-num', 'padWidth', false);
+    bindSliderAndNumber('pad-height-range', 'pad-height-num', 'padHeight', false);
+    bindSliderAndNumber('pad-slope-range', 'pad-slope-num', 'padSlope', false);
+    bindSliderAndNumber('pad-slope-v-range', 'pad-slope-v-num', 'padSlopeV', false);
+
+    bindSliderAndNumber('text-size-range', 'text-size-num', 'textSize', false);
+    bindSliderAndNumber('text-depth-range', 'text-depth-num', 'textDepth', false);
+    bindSliderAndNumber('text-posx-range', 'text-posx-num', 'textPosX', false);
+    bindSliderAndNumber('text-posy-range', 'text-posy-num', 'textPosY', false);
+
+    document.getElementById('color-picker').addEventListener('input', (e) => {
+      state.colorHex = e.target.value;
+      rebuildModel();
+    });
+
+    document.querySelectorAll('#slope-axis-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#slope-axis-seg .seg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.slopeAxis = btn.dataset.val;
+        rebuildModel();
+      });
+    });
+
+    document.querySelectorAll('#hole-shape-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#hole-shape-seg .seg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.holeShape = btn.dataset.val;
+        const isRound = state.holeShape === 'round';
+        document.getElementById('size-x-label').textContent = isRound ? 'Диаметр (X), мм' : 'Размер по X, мм';
+        document.getElementById('size-y-row').style.display = isRound ? 'none' : 'flex';
+        rebuildModel();
+      });
+    });
+
+    document.getElementById('hole-layout-select').addEventListener('change', (e) => {
+      state.holeLayout = e.target.value;
+      const isLine = state.holeLayout === 'line-x' || state.holeLayout === 'line-y';
+      const isGroup = isLine || state.holeLayout.startsWith('grid-');
+      document.getElementById('line-count-row').style.display = isLine ? 'flex' : 'none';
+      document.getElementById('hole-spread-row').style.display = isGroup ? 'flex' : 'none';
+      rebuildModel();
+    });
+
+    document.querySelectorAll('#depth-type-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#depth-type-seg .seg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.depthType = btn.dataset.val;
+        document.getElementById('blind-depth-row').style.display = state.depthType === 'blind' ? 'flex' : 'none';
+        rebuildModel();
+      });
+    });
+
+    document.querySelectorAll('#pad-enabled-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#pad-enabled-seg .seg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.padEnabled = btn.dataset.val === 'on';
+        document.getElementById('pad-controls-wrap').style.display = state.padEnabled ? 'flex' : 'none';
+        rebuildModel();
+      });
+    });
+
+    document.getElementById('text-input').addEventListener('input', (e) => {
+      state.text = e.target.value;
+      rebuildModel();
+    });
+
+    document.querySelectorAll('#text-side-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#text-side-seg .seg-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.textSide = btn.dataset.val;
+        rebuildModel();
+      });
+    });
+
+    function syncTextModeUI() {
+      const mode = state.textMode;
+      document.querySelectorAll('#text-mode-seg .seg-btn').forEach((b) => {
+        b.classList.toggle('active', b.dataset.val === mode);
+      });
+    }
+
+    document.querySelectorAll('#text-mode-seg .seg-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.val;
+        state.textMode = val;
+        const absD = Math.max(0.5, Math.abs(state.textDepth) || 2);
+        state.textDepth = val === 'in' ? -absD : absD;
+        const rEl = document.getElementById('text-depth-range');
+        const nEl = document.getElementById('text-depth-num');
+        if (rEl) rEl.value = state.textDepth;
+        if (nEl) nEl.value = state.textDepth;
+        syncTextModeUI();
+        rebuildModel();
+      });
+    });
+
+    const textDepthRangeEl = document.getElementById('text-depth-range');
+    const textDepthNumEl = document.getElementById('text-depth-num');
+    const onTextDepthChanged = () => {
+      if (Math.abs(state.textDepth) >= 0.05) {
+        state.textMode = state.textDepth < 0 ? 'in' : 'out';
+        syncTextModeUI();
+      }
+    };
+    if (textDepthRangeEl) textDepthRangeEl.addEventListener('input', onTextDepthChanged);
+    if (textDepthNumEl) textDepthNumEl.addEventListener('change', onTextDepthChanged);
+
+    document.getElementById('reset-text-pos-btn').addEventListener('click', () => {
+      state.textPosX = 0;
+      state.textPosY = 0;
+      document.getElementById('text-posx-range').value = 0;
+      document.getElementById('text-posx-num').value = 0;
+      document.getElementById('text-posy-range').value = 0;
+      document.getElementById('text-posy-num').value = 0;
+      rebuildModel();
+    });
+
+    document.getElementById('wireframe-btn').addEventListener('click', (e) => {
+      state.wireframe = !state.wireframe;
+      e.target.classList.toggle('active', state.wireframe);
+      e.target.textContent = `Каркас: ${state.wireframe ? 'Вкл' : 'Выкл'}`;
+      rebuildModel();
+    });
+
+    document.getElementById('autorotate-btn').addEventListener('click', (e) => {
+      state.autoRotate = !state.autoRotate;
+      e.target.classList.toggle('active', state.autoRotate);
+      e.target.textContent = `Автоповорот: ${state.autoRotate ? 'Вкл' : 'Выкл'}`;
+    });
+
+    document.getElementById('export-json-btn').addEventListener('click', downloadJSON);
+
+    const sidePanel = document.getElementById('side-panel');
+    const togglePanelBtn = document.getElementById('toggle-panel-btn');
+    togglePanelBtn.addEventListener('click', () => {
+      const collapsed = sidePanel.classList.toggle('collapsed');
+      togglePanelBtn.textContent = collapsed ? 'Настройки' : 'Во весь экран';
+      window.dispatchEvent(new Event('resize'));
+    });
+    window.addEventListener('resize', () => {
+      const w = container.clientWidth || window.innerWidth;
+      const h = container.clientHeight || Math.max(400, Math.round(window.innerHeight * 0.85));
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    });
+
+    updateCameraFromSpherical();
+    rebuildModel();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (state.autoRotate) {
+        spherical.theta += 0.008;
+        updateCameraFromSpherical();
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
