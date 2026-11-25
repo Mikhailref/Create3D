@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ПодставкаПультМазган — 3D модель</title>
+<style>
+:root{--bg:#f3f4f6;--fg:#1f2937;--mut:#6b7280;--card:rgba(255,255,255,.92);--bd:#d1d5db;--ac:#2563eb;--ok:#059669;box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--fg:#e5e7eb;--mut:#9ca3af;--card:rgba(30,34,41,.92);--bd:#374151;--ac:#60a5fa;--ok:#34d399}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 12px;backdrop-filter:blur(8px);font-size:13px}
+.s{font-size:12px;color:var(--mut);line-height:1.5}
+#info{position:fixed;left:12px;top:12px;max-width:calc(100vw - 340px)}
+.panel{position:fixed;right:12px;top:12px;bottom:62px;width:300px;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
+.ax{border-top:1px solid var(--bd);padding-top:6px;margin-top:2px}
+.ax b,.names b{font-size:12px;color:var(--ac)}
+.row{display:flex;flex-direction:column;gap:2px;margin:4px 0}
+.row .h{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mut);gap:6px}
+.row .h.t{color:var(--fg);font-weight:600}
+.row.off{opacity:.45}
+.row .h{align-items:center}
+.row .lt{flex:1;min-width:0;font:inherit;font-size:12px;color:inherit;font-weight:inherit;background:transparent;border:1px solid transparent;border-radius:5px;padding:1px 3px}
+.row input.lt:hover,.row input.lt:focus{border-color:var(--bd);outline:none}
+.row .chk{width:15px;height:15px;margin:0;accent-color:var(--ac);flex-shrink:0}
+.lkrow{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;margin:6px 0 2px;cursor:pointer;color:var(--ac)}
+.lkrow input{width:15px;height:15px;margin:0;accent-color:var(--ac)}
+.tools{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:4px 0 2px}
+.tools button{padding:2px 9px;font-size:11px;border-radius:999px}
+.tools a{font-size:11px;color:var(--ac);cursor:pointer;text-decoration:underline;margin-inline-start:4px}
+.row input[type=number]{width:70px;font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:2px 4px}
+input[type=range]{width:100%;margin:0;accent-color:var(--ac)}
+.names{display:grid;grid-template-columns:34px 1fr;gap:4px 6px;align-items:center}
+.names b{grid-column:1/-1;margin-top:4px}
+.names span{font-size:11px;color:var(--mut)}
+.names input,.names select,.unit select{font:inherit;font-size:12px;color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:3px 6px;min-width:0;width:100%}
+.names option,.unit option{color:#111}
+.unit{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)}
+.unit select{width:auto;flex:1}
+.bar{position:fixed;left:12px;right:324px;bottom:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+button,label.btn{font:inherit;font-size:13px;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:7px 13px;cursor:pointer;backdrop-filter:blur(8px);display:inline-flex;align-items:center;gap:6px}
+button.on{border-color:var(--ac);color:var(--ac)}
+button.dl{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600;border-radius:10px;padding:10px 13px;justify-content:center}
+button[hidden]{display:none}
+label.primary{background:var(--ac);border-color:var(--ac);color:#fff}
+input[type=color]{width:22px;height:22px;border:0;padding:0;background:none;cursor:pointer}
+input[type=file]{display:none}
+#drop{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;text-align:center;color:var(--mut);font-size:16px;padding:24px}
+#drop.hide{display:none}
+#over{position:fixed;inset:10px;border:3px dashed var(--ac);border-radius:16px;display:none;pointer-events:none}
+#over.show{display:block}
+body.viewer .conv-only{display:none!important}
+body.viewer .bar{right:12px}
+body.viewer #drop{display:none}
+@media (max-width:720px){
+  #info{max-width:calc(100vw - 24px);top:8px;left:8px;padding:6px 10px}
+  .bar{left:8px;right:8px;top:auto;bottom:auto;position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:2px}
+  .bar button,.bar label.btn{white-space:nowrap;padding:6px 11px;font-size:12px}
+  .panel{left:8px;right:8px;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:auto;max-height:46vh}
+  body.viewer .bar{right:8px}
+}
+</style></head>
+<body class="viewer">
+<canvas id="c" width="2560" height="1167"></canvas>
+<div id="drop" class="hide"><div>Перетащите сюда файл .obj или .html (экспорт FreeCAD)<br>или нажмите «Открыть OBJ / HTML»</div></div>
+<div id="over" class=""></div>
+<div class="card s" id="info"></div>
+<div class="panel card" id="panel">
+  <div class="conv-only" id="convBox">
+    <div class="names" id="names">
+      <b>Данные для сайта</b>
+      <span>RU</span><input id="nr" placeholder="Название (русский)">
+      <span>EN</span><input id="ne" placeholder="Name (English)">
+      <span>HE</span><input id="nh" placeholder="שם (עברית)" dir="rtl">
+      <span>Тег</span><div style="display:flex;gap:4px"><input id="tr" placeholder="RU" value="Модель"><input id="te" placeholder="EN" value="Model"><input id="th" placeholder="HE" value="דגם" dir="rtl"></div>
+      <span>Опис.</span><div style="display:flex;flex-direction:column;gap:4px"><input id="dr" placeholder="Описание RU (для поиска на сайте)"><input id="de" placeholder="Description EN"><input id="dh" placeholder="תיאור HE" dir="rtl"></div>
+    </div>
+    <div class="unit" style="margin-top:8px">Единицы в файле
+      <select id="unit"><option value="1">мм</option><option value="10">см</option><option value="1000">м</option><option value="25.4">дюймы</option></select>
+    </div>
+    <label class="lkrow"><input type="checkbox" id="thr" checked="">Упростить резьбу (гладкий цилиндр)</label>
+  </div>
+  <div class="tools conv-only" id="tools">
+    <span class="s">Названия:</span>
+    <button type="button" data-ll="ru" class="on">RU</button><button type="button" data-ll="en">EN</button><button type="button" data-ll="he">HE</button>
+    <a id="allOn">все ползунки</a><a id="onlyTot">масштаб и оси</a>
+  </div>
+  <div class="s conv-only" id="tipSl">Галочка — показывать ползунок на сайте. Название можно изменить прямо в строке. Ползунки подбираются автоматически: масштаб, оси, диаметры, отверстия, уклоны.</div>
+  <div id="axes"></div>
+  <button id="rs">Исходные размеры</button>
+  <button id="bd" class="dl conv-only">⬇ Скачать готовый HTML</button>
+  <div class="s" id="msg"></div>
+</div>
+<div class="bar">
+<label class="btn primary conv-only">Открыть OBJ / HTML<input id="f" type="file" accept=".obj,.html,.htm"></label>
+<button id="bz" class="on conv-only">Z вверх</button>
+<button id="bs" class="on conv-only">Сглаживание</button>
+<button id="bw">Каркас</button>
+<button id="br" class="">Вращение</button>
+<label class="btn">Цвет <input id="col" type="color" value="#4a4d52"></label>
+<button id="bv">Сброс вида</button>
+</div>
+<script type="text/plain" id="core-src">
+function faceNormals(pos,n,area){
+  const fn=new Float32Array(n*3);
+  for(let f=0;f<n;f++){
+    const o=f*9,ax=pos[o+3]-pos[o],ay=pos[o+4]-pos[o+1],az=pos[o+5]-pos[o+2],bx=pos[o+6]-pos[o],by=pos[o+7]-pos[o+1],bz=pos[o+8]-pos[o+2];
+    const x=ay*bz-az*by,y=az*bx-ax*bz,z=ax*by-ay*bx,l=Math.hypot(x,y,z)||1;
+    fn[f*3]=x/l;fn[f*3+1]=y/l;fn[f*3+2]=z/l;if(area)area[f]=l/2;
+  }
+  return fn;
+}
+// поиск ключевых плоскостей по каждой оси и построение параметров
+function detect(pos,n,opt){
+  const split=!!(opt&&opt.split); // split: каждая стенка отдельно (без зеркальной симметрии)
+  const area=new Float32Array(n),fn=faceNormals(pos,n,area),res=[];
+  const NV=pos.length/3,wid=new Int32Array(NV),wm=new Map(),wp=[];
+  for(let v=0;v<NV;v++){const k=Math.round(pos[v*3]*1e4)+','+Math.round(pos[v*3+1]*1e4)+','+Math.round(pos[v*3+2]*1e4);
+    let id=wm.get(k);if(id===undefined){id=wp.length/3;wm.set(k,id);wp.push(pos[v*3],pos[v*3+1],pos[v*3+2])}wid[v]=id}
+  let e0=0;for(let a=0;a<3;a++){let l=Infinity,h=-Infinity;for(let i=a;i<pos.length;i+=3){l=Math.min(l,pos[i]);h=Math.max(h,pos[i])}e0=Math.max(e0,h-l)}
+  const tau=.035*e0,par=Int32Array.from({length:wp.length/3},(_,i)=>i),find=x=>{while(par[x]!==x){par[x]=par[par[x]];x=par[x]}return x};
+  for(let f=0;f<n;f++)for(let i=0;i<3;i++){
+    const a=wid[f*3+i],b=wid[f*3+(i+1)%3];
+    if(Math.hypot(wp[a*3]-wp[b*3],wp[a*3+1]-wp[b*3+1],wp[a*3+2]-wp[b*3+2])<tau)par[find(a)]=find(b);
+  }
+  // плотные участки мелкой геометрии (например, выпуклый текст) двигаются как жёсткий блок
+  const cm=new Map();
+  for(let i=0;i<wp.length/3;i++){const r=find(i);let c=cm.get(r);if(!c)cm.set(r,c={n:0,mn:[1e9,1e9,1e9],mx:[-1e9,-1e9,-1e9]});c.n++;for(let k=0;k<3;k++){c.mn[k]=Math.min(c.mn[k],wp[i*3+k]);c.mx[k]=Math.max(c.mx[k],wp[i*3+k])}}
+  const dense=new Set();
+  for(const [r,c] of cm){if(c.n<200)continue;const ex=c.mx.map((x,k)=>x-c.mn[k]).sort((x,y)=>y-x);
+    if(c.n/Math.max(ex[0]*ex[1],1e-6)*tau*tau>20)dense.add(r)}
+  const cid=new Int32Array(NV);for(let v=0;v<NV;v++){const r=find(wid[v]);cid[v]=dense.has(r)?r:-1}
+  for(let a=0;a<3;a++){
+    let lo=Infinity,hi=-Infinity;
+    for(let i=a;i<pos.length;i+=3){lo=Math.min(lo,pos[i]);hi=Math.max(hi,pos[i])}
+    const bins=new Map();
+    for(let f=0;f<n;f++){
+      if(Math.abs(fn[f*3+a])<.999)continue;
+      const c0=pos[f*9+a];if(Math.abs(c0-pos[f*9+3+a])>1e-3||Math.abs(c0-pos[f*9+6+a])>1e-3)continue;
+      const k=Math.round(c0*10),b=bins.get(k)||{a:0,s:0,n:0};b.a+=area[f];b.s+=c0*area[f];b.n+=area[f]*Math.sign(fn[f*3+a]);bins.set(k,b);
+    }
+    const ks=[...bins.keys()].sort((x,y)=>x-y),grp=[];
+    for(const k of ks){const b=bins.get(k),g=grp[grp.length-1];
+      if(g&&k-g.k<=1){g.a+=b.a;g.s+=b.s;g.n+=b.n;g.k=k}else grp.push({a:b.a,s:b.s,n:b.n,k})}
+    const mx=Math.max(0,...grp.map(g=>g.a));
+    let P=grp.filter(g=>g.a>=mx*.1).map(g=>g.s/g.a);
+    // стенки: наружная плоскость на краю детали + ближайшая внутренняя плоскость с противоположной нормалью
+    const gv=grp.map(g=>({v:g.s/g.a,a:g.a,n:g.n})),ex0=hi-lo;let wLo=null,wHi=null;
+    const lowOut=gv.find(g=>Math.abs(g.v-lo)<.3&&g.n<0&&g.a>=mx*.1);
+    if(lowOut){const w=gv.find(g=>g.v>lowOut.v+.3&&g.n>0&&g.a>=mx*.015&&g.v-lowOut.v<=.33*ex0);if(w)wLo=w.v}
+    const hiOut=gv.slice().reverse().find(g=>Math.abs(g.v-hi)<.3&&g.n>0&&g.a>=mx*.1);
+    if(hiOut){const w=gv.slice().reverse().find(g=>g.v<hiOut.v-.3&&g.n<0&&g.a>=mx*.015&&hiOut.v-g.v<=.33*ex0);if(w)wHi=w.v}
+    [wLo,wHi].forEach(w=>{if(w!==null&&!P.some(x=>Math.abs(x-w)<.3))P.push(w)});
+    P.sort((x,y)=>x-y);
+    if(!P.length||P[0]-lo>.3)P.unshift(lo);
+    if(hi-P[P.length-1]>.3)P.push(hi);
+    const k=P.length,c=(lo+hi)/2;
+    let sym=!split&&k>=4&&k%2===0;
+    for(let i=0;sym&&i<k/2;i++)if(Math.abs((P[i]-c)+(P[k-1-i]-c))>.2)sym=false;
+    const A={a,sym,c,P,lo,hi};
+    if(sym){
+      const h=P.slice(k/2).map(p=>p-c);A.bp=[0,...h];
+      A.segs=[2*h[0],...h.slice(1).map((v,i)=>v-h[i])];
+      A.names=A.segs.map((_,i)=>i===0?'Внутренняя ширина':(A.segs.length===2?'Толщина стенки':'Стенка '+i));
+    }else{
+      A.bp=P.slice();A.segs=P.slice(1).map((v,i)=>v-P[i]);
+      A.names=A.segs.map((_,i)=>'Участок '+(i+1));
+    }
+    A.wall=sym?A.segs.map((_,i)=>i>=1):A.segs.map((_,i)=>{const L=A.segs.length;return L>1&&((wLo!==null&&i===0&&Math.abs(P[1]-wLo)<.3)||(wHi!==null&&i===L-1&&Math.abs(P[L-1]-wHi)<.3))});
+    A.inner=A.segs.map((_,i)=>!sym&&A.segs.length===3&&A.wall[0]&&A.wall[2]&&i===1);
+    A.vals=A.segs.slice();A.totName=['Внешняя длина','Внешняя ширина','Внешняя высота'][a];
+    A.rng=A.segs.map((s,i)=>sym?(i===0?[s*.5,s*2]:[Math.max(1,s*.5),s*2.5]):(A.wall[i]?[Math.max(.5,s*.5),s*2.5]:[s*.5,s*2.5]));
+    const T0=sym?A.segs[0]+2*A.segs.slice(1).reduce((q,x)=>q+x,0):A.segs.reduce((q,x)=>q+x,0);
+    A.trng=sym?[A.rng[0][0]+2*A.rng.slice(1).reduce((q,x)=>q+x[0],0),A.rng[0][1]+2*A.rng.slice(1).reduce((q,x)=>q+x[1],0)]:[T0*.7,T0*1.4];
+    const N=NV;A.idx=new Uint8Array(N);A.sg=new Int8Array(N);A.f=new Float32Array(N);
+    const U=new Float32Array(N);
+    for(let v=0;v<N;v++){let u=pos[v*3+a];if(sym){u-=c;A.sg[v]=u<0?-1:1;u=Math.abs(u)}U[v]=u}
+    // жёсткие блоки по этой оси: скругления, фаски, текст и другие мелкие детали двигаются целиком и не деформируются
+    const ext=hi-lo,rig=new Set();
+    for(const [rt,cc] of cm){if(dense.has(rt)||(cc.n>=3&&cc.mx[a]-cc.mn[a]<=.2*ext))rig.add(rt)}
+    const cida=new Int32Array(N);for(let v=0;v<N;v++){const rt=find(wid[v]);cida[v]=rig.has(rt)?rt:-1}
+    const cs=new Map();
+    for(let v=0;v<N;v++)if(cida[v]>=0){const u=sym?pos[v*3+a]-c:pos[v*3+a];let q=cs.get(cida[v]);if(!q)cs.set(cida[v],q={s:0,n:0,mn:u,mx:u});q.s+=u;q.n++;if(u<q.mn)q.mn=u;if(u>q.mx)q.mx=u}
+    if(sym){
+      const su=Array.from(U).sort((x,y)=>x-y).filter((x,i,r)=>!i||x-r[i-1]>1e-3),cuts=[];
+      for(let j=0;j<A.bp.length-1;j++){
+        const lo2=A.bp[j],hi2=A.bp[j+1],L=hi2-lo2,mg=L>20?.15*L:0,pts=[lo2,...su.filter(x=>x>lo2+1e-3&&x<hi2-1e-3),hi2];
+        let bg=0,cut=(lo2+hi2)/2;
+        for(let i=1;i<pts.length;i++){const m=(pts[i]+pts[i-1])/2;if(m<lo2+mg||m>hi2-mg)continue;if(pts[i]-pts[i-1]>bg){bg=pts[i]-pts[i-1];cut=m}}
+        cuts.push(cut);
+      }
+      const zone=u=>{let j=0;while(j<cuts.length&&u>cuts[j])j++;return j};
+      // блок привязывается к ключевой плоскости, которой он касается (скругление едет вместе со своей стенкой)
+      const bind=q=>{
+        if(q.mn*q.mx<0)return -1;
+        const lo2=Math.min(Math.abs(q.mn),Math.abs(q.mx)),hi2=Math.max(Math.abs(q.mn),Math.abs(q.mx));let jl=-1,jh=-1;
+        for(let k=1;k<A.bp.length;k++){if(Math.abs(hi2-A.bp[k])<.3)jh=k;if(Math.abs(lo2-A.bp[k])<.3)jl=k}
+        if(jh>=0&&jl<0)return jh;if(jl>=0&&jh<0)return jl;if(jh>=0&&jh===jl)return jh;return -1;
+      };
+      for(let v=0;v<N;v++){A.idx[v]=zone(U[v]);
+        if(cida[v]>=0){const q=cs.get(cida[v]),m=q.s/q.n,j=bind(q);A.idx[v]=j>=0?j:zone(Math.abs(m));A.sg[v]=m<0?-1:1}}
+    }else{
+      const L=hi-lo,r0=lo+.15*L,r1=hi-.15*L,fr=x=>Math.min(1,Math.max(0,(x-r0)/(r1-r0)));
+      A.T0=A.segs.reduce((q,x)=>q+x,0);
+      for(let v=0;v<N;v++){A.f[v]=fr(U[v]);if(cida[v]>=0){const q=cs.get(cida[v]);A.f[v]=fr(q.s/q.n)}}
+      // режим «по участкам»: каждая деталь привязана к участку между ключевыми плоскостями
+      A.sj=new Uint8Array(N);A.st=new Float32Array(N);
+      for(let v=0;v<N;v++){
+        let ref=U[v];
+        if(cida[v]>=0){
+          const q=cs.get(cida[v]);ref=q.s/q.n;let jl=-1,jh=-1;
+          for(let k=0;k<A.bp.length;k++){if(Math.abs(q.mx-A.bp[k])<.3)jh=k;if(Math.abs(q.mn-A.bp[k])<.3)jl=k}
+          if((jh>=0&&jl<0)||(jl>=0&&jh<0)||(jh>=0&&jh===jl))ref=A.bp[jh>=0?jh:jl];
+        }
+        let j=0;while(j<A.bp.length-2&&ref>A.bp[j+1])j++;
+        const dl=A.bp[j+1]-A.bp[j];A.sj[v]=j;A.st[v]=dl>1e-9?Math.min(1,Math.max(0,(ref-A.bp[j])/dl)):0;
+      }
+    }
+    A.seg=false;A.free=null;
+    res.push(A);
+  }
+  return res;
+}
+function newBP(A){
+  const v=A.vals,o=[];
+  if(A.sym){o.push(0,v[0]/2);for(let i=1;i<v.length;i++)o.push(o[o.length-1]+v[i])}
+  else{o.push(A.P[0]);for(let i=0;i<v.length;i++)o.push(o[o.length-1]+v[i])}
+  return o;
+}
+function total(A){return A.sym?A.vals[0]+2*A.vals.slice(1).reduce((s,x)=>s+x,0):A.vals.reduce((s,x)=>s+x,0)}
+function setSeg(A,i,v){A.vals[i]=Math.min(A.rng[i][1],Math.max(A.rng[i][0],v))}
+function setTotal(A,T){
+  if(A.sym){setSeg(A,0,T-2*A.vals.slice(1).reduce((s,x)=>s+x,0))}
+  else if(A.seg){
+    T=Math.min(A.trng[1],Math.max(A.trng[0],T));
+    const fr=A.free||A.vals.map(()=>true),all=A.vals.map((_,i)=>i);
+    let idx=all.filter(i=>fr[i]&&!(A.wall&&A.wall[i]));
+    if(!idx.length)idx=all.filter(i=>fr[i]);
+    if(!idx.length)return;
+    let Sf=0,So=0;A.vals.forEach((x,i)=>{if(idx.indexOf(i)>=0)Sf+=x;else So+=x});
+    if(Sf<=0)return;
+    const k=(T-So)/Sf;
+    idx.forEach(i=>{A.vals[i]=Math.min(A.rng[i][1],Math.max(A.rng[i][0],A.vals[i]*k))});
+  }
+  else{T=Math.min(A.trng[1],Math.max(A.trng[0],T));let m=0;A.vals.forEach((x,i)=>{if(x>A.vals[m])m=i});
+    A.vals[m]=Math.max(.1,T-A.vals.reduce((s,x,i)=>s+(i===m?0:x),0))}
+}
+function deform(pos0,out,AX){
+  out.set(pos0);
+  for(const A of AX){
+    const a=A.a,N=A.idx.length;
+    if(A.sym){const nb=newBP(A),d=nb.map((x,j)=>x-A.bp[j]);for(let v=0;v<N;v++)out[v*3+a]+=A.sg[v]*d[A.idx[v]]}
+    else if(A.seg){const nb=newBP(A);for(let v=0;v<N;v++){const j=A.sj[v],t=A.st[v];out[v*3+a]+=nb[j]+t*(nb[j+1]-nb[j])-(A.bp[j]+t*(A.bp[j+1]-A.bp[j]))}}
+    else{const D=total(A)-A.T0;for(let v=0;v<N;v++)out[v*3+a]+=A.f[v]*D}
+  }
+}
+// ---------- разбор OBJ ----------
+function parseOBJ(t){
+  const V=[],o=[];
+  for(const line of t.split(/\r?\n/)){
+    const c=line.charCodeAt(0);
+    if(c!==118&&c!==102&&c!==32&&c!==9)continue; // быстрый отсев: только строки v и f
+    const p=line.trim().split(/\s+/);
+    if(p[0]==='v')V.push(+p[1],+p[2],+p[3]);
+    else if(p[0]==='f'){
+      const ix=p.slice(1).map(s=>{const i=parseInt(s);return i<0?V.length/3+i:i-1});
+      for(let k=1;k<ix.length-1;k++)for(const i of [ix[0],ix[k],ix[k+1]])o.push(V[i*3],V[i*3+1],V[i*3+2]);
+    }
+  }
+  return {pos:Float32Array.from(o),n:o.length/9};
+}
+// ---------- сварка вершин: индексная форма (компактная) ----------
+function weld(pos){
+  const m=new Map(),U=[],I=[];
+  for(let i=0;i<pos.length;i+=3){
+    const k=Math.round(pos[i]*1e4)+','+Math.round(pos[i+1]*1e4)+','+Math.round(pos[i+2]*1e4);
+    let id=m.get(k);
+    if(id===undefined){id=U.length/3;m.set(k,id);U.push(pos[i],pos[i+1],pos[i+2])}
+    I.push(id);
+  }
+  const T=[];
+  for(let f=0;f<I.length;f+=3){const a=I[f],b=I[f+1],c=I[f+2];if(a!==b&&b!==c&&a!==c)T.push(a,b,c)}
+  return {U:Float32Array.from(U),I:Uint32Array.from(T)};
+}
+function expand(U,I){
+  const o=new Float32Array(I.length*3);
+  for(let i=0;i<I.length;i++){o[i*3]=U[I[i]*3];o[i*3+1]=U[I[i]*3+1];o[i*3+2]=U[I[i]*3+2]}
+  return o;
+}
+// эталонная («каноническая») геометрия: и конвертер, и сайт работают с одним и тем же массивом
+function canon(pos){const w=weld(pos);return {U:w.U,I:w.I,pos:expand(w.U,w.I),n:w.I.length/3}}
+function b64enc(a){const u=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)}
+function b64dec(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+function slug(name){
+  const base=name.replace(/\.[^.]+$/,'');
+  const a=base.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  let h=5381;for(let i=0;i<base.length;i++)h=((h<<5)+h+base.charCodeAt(i))>>>0;
+  const pure=/^[\x20-\x7e]+$/.test(base)&&a;
+  return 'obj-'+(pure?a:(a?a+'-':'')+h.toString(36));
+}
+// ---------- параметры модели: список, подписи, видимость ----------
+const LBL={
+  he:{axis:['אורך','רוחב','גובה'],tot:['אורך חיצוני','רוחב חיצוני','גובה חיצוני'],inner:'מידה פנימית',wall:'עובי דופן',part:'קטע',thick:'עובי',all:'עובי כל הקירות, %',lo:['התחלה','התחלה','תחתית'],hi:['סוף','סוף','עליון']},
+  en:{axis:['Length','Width','Height'],tot:['Outer length','Outer width','Outer height'],inner:'inner size',wall:'wall thickness',part:'section',thick:'thickness',all:'All walls thickness, %',lo:['start','start','bottom'],hi:['end','end','top']},
+  ru:{axis:['Длина','Ширина','Высота'],tot:['Внешняя длина','Внешняя ширина','Внешняя высота'],inner:'внутренний размер',wall:'толщина стенки',part:'участок',thick:'толщина',all:'Толщина всех стенок, %',lo:['начало','начало','низ'],hi:['конец','конец','верх']}
+};
+// все возможные ползунки: s — сегменты симметричной оси, p — участки несимметричной оси, t — внешний размер
+function paramList(axes){
+  const o=[];
+  axes.forEach((ax,ai)=>{
+    if(ax.sym)for(let i=0;i<ax.n;i++)o.push({key:'a'+ai+'s'+i,ai,i,kind:'s',ax});
+    else if(ax.n>1)for(let i=0;i<ax.n;i++)o.push({key:'a'+ai+'s'+i,ai,i,kind:(ax.wall&&ax.wall[i])?'w':(ax.inner&&ax.inner[i]?'i':'p'),ax});
+    o.push({key:'a'+ai+'t',ai,i:-1,kind:'t',ax});
+  });
+  if(o.filter(isWall).length>1)o.unshift({key:'wall_all',ai:-1,i:-1,kind:'m',ax:null});
+  return o;
+}
+function defLabel(lang,p){
+  const L=LBL[lang]||LBL.en,ax=L.axis[p.ai]||'';
+  if(p.kind==='t')return L.tot[p.ai];
+  if(p.kind==='m')return L.all;
+  if(p.kind==='i')return ax+': '+L.inner;
+  if(p.kind==='w')return ax+': '+L.thick+' ('+(p.i===0?L.lo[p.ai]:L.hi[p.ai])+')';
+  if(p.kind==='p')return ax+': '+L.part+' '+(p.i+1);
+  return ax+': '+(p.i===0?L.inner:(p.ax.n===2?L.wall:L.wall+' '+p.i));
+}
+// выключенные ползунки; у старых моделей (без поля ui) участки несимметричных осей выключены
+function offSet(e){
+  let s;
+  if(e.ui&&Array.isArray(e.ui.off))s=new Set(e.ui.off);
+  else{s=new Set();paramList(e.axes).forEach(p=>{if(p.kind==='p')s.add(p.key)})}
+  if((e.ver||0)<4)s.add('wall_all');
+  return s;
+}
+function labelOf(e,p,lang){
+  const o=e.ui&&e.ui.lab&&e.ui.lab[p.key];
+  return (o&&o[lang])||defLabel(lang,p);
+}
+const isWall=p=>(p.kind==='s'&&p.i>=1)||p.kind==='w';
+// пропорциональное изменение всех видимых стенок: ws=[{key,orig,min,max}], dk — какую стенку двигает пользователь
+function wallScaleF(ws,f){
+  let fmin=0,fmax=Infinity;
+  ws.forEach(w=>{if(w.orig>0){fmin=Math.max(fmin,w.min/w.orig);fmax=Math.min(fmax,w.max/w.orig)}});
+  if(fmin<=fmax)f=Math.min(fmax,Math.max(fmin,f));
+  const o={};ws.forEach(w=>{o[w.key]=w.orig*f});return {vals:o,f};
+}
+function wallScale(ws,dk,v){const d=ws.find(w=>w.key===dk);if(!d||!(d.orig>0))return null;return wallScaleF(ws,v/d.orig).vals}
+// средний процент от исходной толщины (для общего ползунка стенок)
+function wallPct(ws,get){let s=0,n=0;ws.forEach(w=>{if(w.orig>0){s+=get(w.key)/w.orig;n++}});return n?s/n*100:100}
+// превью модели: серая «карта освещения» перекрашивается фильтром в цвет модели
+const NEUTRAL=215;
+function hexRGB(h){h=String(h||'#4a4d52').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16)||0;return [(n>>16)&255,(n>>8)&255,n&255]}
+function tintSvg(thumb,color,uid){
+  const c=hexRGB(color).map(v=>+(v/NEUTRAL).toFixed(4)),id='tn-'+String(uid).replace(/[^a-zA-Z0-9-]/g,'-');
+  return '<svg viewBox="0 0 120 120" fill="none"><defs><filter id="'+id+'" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="'+c[0]+' 0 0 0 0 0 '+c[1]+' 0 0 0 0 0 '+c[2]+' 0 0 0 0 0 1 0"/></filter></defs><image href="'+thumb+'" x="0" y="0" width="120" height="120" filter="url(#'+id+')"/></svg>';
+}
+function pick(o,lang){return (o&&(o[lang]||o.en||o.ru||o.he||Object.values(o)[0]))||''}
+// запись модели для сайта (формат objmodel v2)
+function buildEntry(o){
+  const c=o.canon,big=c.U.length/3>65535;
+  const idx=big?Uint32Array.from(c.I):Uint16Array.from(c.I);
+  return {
+    fmt:'objmodel',ver:4,split:o.split?1:0,thn:o.thn?1:0,desc:o.desc||{},id:o.id,name:o.name,tag:o.tag,color:o.color,z:!!o.z,s:!!o.s,
+    src:o.src,tris:c.I.length/3,added:new Date().toISOString().slice(0,10),thumb:o.thumb||'',
+    pos:b64enc(c.U),idx:b64enc(idx),ib:big?4:2,
+    ui:o.ui||{off:[],lab:{},rg:{},link:{show:true,on:false}},
+    axes:o.AX.map(A=>{
+      const def=A.vals.slice();
+      const rng=A.rng.map((r,i)=>[Math.min(r[0],def[i]),Math.max(r[1],def[i])]);
+      const T=total(A);
+      return {sym:!!A.sym,n:def.length,wall:A.wall||null,inner:A.inner||null,rng,trng:[Math.min(A.trng[0],T),Math.max(A.trng[1],T)],def,tdef:T,orig:A.segs.slice()};
+    })
+  };
+}
+// ===================== ГЕОМЕТРИЯ v2: масштаб, оси, диаметры, отверстия, уклоны =====================
+// U — уникальные вершины (Float32Array, x y z), I — индексы треугольников
+function geoKasa(U,pts,u,v){
+  let mu=0,mv=0;pts.forEach(i=>{mu+=U[i*3+u];mv+=U[i*3+v]});mu/=pts.length;mv/=pts.length;
+  let a11=0,a12=0,a13=0,a22=0,a23=0,a33=pts.length,b1=0,b2=0,b3=0;
+  pts.forEach(i=>{const x=U[i*3+u]-mu,y=U[i*3+v]-mv,z=x*x+y*y;
+    a11+=4*x*x;a12+=4*x*y;a13+=2*x;a22+=4*y*y;a23+=2*y;b1+=2*x*z;b2+=2*y*z;b3+=z});
+  const M=[[a11,a12,a13,b1],[a12,a22,a23,b2],[a13,a23,a33,b3]];
+  for(let c=0;c<3;c++){
+    let p=c;for(let r=c+1;r<3;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;
+    if(Math.abs(M[p][c])<1e-12)return null;
+    [M[c],M[p]]=[M[p],M[c]];
+    for(let r=0;r<3;r++)if(r!==c){const f=M[r][c]/M[c][c];for(let k=c;k<4;k++)M[r][k]-=f*M[c][k]}
+  }
+  const cx=M[0][3]/M[0][0],cy=M[1][3]/M[1][1],k=M[2][3]/M[2][2],r2=k+cx*cx+cy*cy;
+  if(!(r2>0))return null;
+  return {cu:cx+mu,cv:cy+mv,r:Math.sqrt(r2)};
+}
+function geoCover(U,pts,u,v,cu,cv){
+  const an=pts.map(i=>Math.atan2(U[i*3+v]-cv,U[i*3+u]-cu)).sort((x,y)=>x-y);
+  let mg=an[0]+2*Math.PI-an[an.length-1],mi=-1;
+  for(let i=0;i<an.length-1;i++){const g=an[i+1]-an[i];if(g>mg){mg=g;mi=i}}
+  const A=mi<0?an[0]:an[mi+1],B=mi<0?an[an.length-1]:an[mi];
+  return {cov:2*Math.PI-mg,A,B};
+}
+function geoDetect(U,I){
+  const V=U.length/3,T=I.length/3;
+  const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
+  for(let i=0;i<V;i++)for(let k=0;k<3;k++){const x=U[i*3+k];if(x<mn[k])mn[k]=x;if(x>mx[k])mx[k]=x}
+  const c0=mn.map((x,k)=>(x+mx[k])/2),dim=mx.map((x,k)=>x-mn[k]);
+  const nrm=new Float32Array(T*3),area=new Float32Array(T);let vol=0,tot=0;
+  for(let t=0;t<T;t++){
+    const a=I[t*3]*3,b=I[t*3+1]*3,c=I[t*3+2]*3;
+    const e1x=U[b]-U[a],e1y=U[b+1]-U[a+1],e1z=U[b+2]-U[a+2],e2x=U[c]-U[a],e2y=U[c+1]-U[a+1],e2z=U[c+2]-U[a+2];
+    const nx=e1y*e2z-e1z*e2y,ny=e1z*e2x-e1x*e2z,nz=e1x*e2y-e1y*e2x,l=Math.hypot(nx,ny,nz);
+    area[t]=l/2;tot+=l/2;
+    if(l>1e-12){nrm[t*3]=nx/l;nrm[t*3+1]=ny/l;nrm[t*3+2]=nz/l}
+    vol+=(U[a]*(U[b+1]*U[c+2]-U[b+2]*U[c+1])-U[a+1]*(U[b]*U[c+2]-U[b+2]*U[c])+U[a+2]*(U[b]*U[c+1]-U[b+1]*U[c]))/6;
+  }
+  if(vol<0)for(let i=0;i<nrm.length;i++)nrm[i]=-nrm[i]; // нормали наружу
+  const em=new Map(),nb=new Array(T);for(let t=0;t<T;t++)nb[t]=[];
+  for(let t=0;t<T;t++)for(let e=0;e<3;e++){
+    const p=I[t*3+e],q=I[t*3+(e+1)%3],key=p<q?p*V+q:q*V+p,o=em.get(key);
+    if(o===undefined)em.set(key,t);else{nb[t].push(o);nb[o].push(t)}
+  }
+  // ---- цилиндры вдоль осей X, Y, Z ----
+  const found=[];
+  for(let a=0;a<3;a++){
+    const u=(a+1)%3,v=(a+2)%3,q=new Uint8Array(T),phi=new Float32Array(T);
+    for(let t=0;t<T;t++)if(area[t]>0&&Math.abs(nrm[t*3+a])<.05){q[t]=1;phi[t]=Math.atan2(nrm[t*3+v],nrm[t*3+u])}
+    const dph=(s,t)=>{const d=Math.abs(phi[s]-phi[t]);return d>Math.PI?2*Math.PI-d:d};
+    const cvx=new Uint8Array(T);
+    for(let t=0;t<T;t++)if(q[t])for(const s of nb[t])if(q[s]){const d=dph(s,t);if(d>.005&&d<1.22){cvx[t]=1;break}}
+    const comp=new Uint8Array(T);
+    for(let t0=0;t0<T;t0++){
+      if(!cvx[t0]||comp[t0])continue;
+      const st=[t0],tris=[];comp[t0]=1;
+      while(st.length){const x=st.pop();tris.push(x);for(const s of nb[x])if(cvx[s]&&!comp[s]&&dph(s,x)<1.22){comp[s]=1;st.push(s)}}
+      const ids=new Set();tris.forEach(t=>{for(let e=0;e<3;e++)ids.add(I[t*3+e])});
+      let pts=[...ids],fit=null;
+      for(let it=0;it<3&&pts.length>=6;it++){
+        fit=geoKasa(U,pts,u,v);if(!fit){pts=[];break}
+        const lim=Math.max(.05*fit.r,.15);
+        const keep=pts.filter(i=>Math.abs(Math.hypot(U[i*3+u]-fit.cu,U[i*3+v]-fit.cv)-fit.r)<=lim);
+        if(keep.length===pts.length)break;pts=keep;
+      }
+      if(pts.length<6||!fit)continue;
+      fit=geoKasa(U,pts,u,v);if(!fit)continue;
+      let rms=0;pts.forEach(i=>{const d=Math.hypot(U[i*3+u]-fit.cu,U[i*3+v]-fit.cv)-fit.r;rms+=d*d});rms=Math.sqrt(rms/pts.length);
+      if(fit.r<.4||fit.r>Math.max(...dim)||rms>.03*fit.r+.03)continue;
+      const set=new Set(pts);let os=0;
+      tris.forEach(t=>{
+        let ok=true;for(let e=0;e<3;e++)if(!set.has(I[t*3+e]))ok=false;if(!ok)return;
+        let mu=0,mv=0;for(let e=0;e<3;e++){mu+=U[I[t*3+e]*3+u];mv+=U[I[t*3+e]*3+v]}mu=mu/3-fit.cu;mv=mv/3-fit.cv;
+        const l=Math.hypot(mu,mv)||1;os+=area[t]*(nrm[t*3+u]*mu+nrm[t*3+v]*mv)/l;
+      });
+      found.push({ax:a,u,v,cu:fit.cu,cv:fit.cv,r:fit.r,pts:set,os});
+    }
+  }
+  // ---- слияние кусков одного цилиндра (разрезанных на половины / по длине) ----
+  const merged=[];
+  found.forEach(f=>{
+    const m=merged.find(g=>g.ax===f.ax&&Math.abs(g.cu-f.cu)<.3&&Math.abs(g.cv-f.cv)<.3&&Math.abs(g.r-f.r)<.02*g.r+.05);
+    if(m){f.pts.forEach(i=>m.pts.add(i));m.os+=f.os}else merged.push(f);
+  });
+  const cyl=[];
+  merged.forEach(f=>{
+    const pts=[...f.pts],cv=geoCover(U,pts,f.u,f.v,f.cu,f.cv);
+    let kind='arc';if(cv.cov>=5.76)kind=f.os>0?'boss':'hole';
+    let bu=0,bv=0;
+    if(kind==='arc'){
+      const bind=(ph)=>{const c=Math.cos(ph),s=Math.sin(ph);return Math.abs(s)<.035?[Math.sign(c),0]:(Math.abs(c)<.035?[0,Math.sign(s)]:[0,0])};
+      const e1=bind(cv.A),e2=bind(cv.B);
+      const comb=(x,y)=>x&&y?(x===y?x:0):(x||y);
+      bu=comb(e1[0],e2[0]);bv=comb(e1[1],e2[1]);
+    }
+    if(kind==='arc'&&f.r>.15*Math.max(...dim))return; // большие дуги — часть формы детали, масштабируются вместе с ней
+    cyl.push({ax:f.ax,u:f.u,v:f.v,cu:f.cu,cv:f.cv,r:f.r,kind,bu,bv,pts});
+  });
+  const rank=k=>({hole:0,boss:1,arc:2})[k];
+  cyl.sort((x,y)=>rank(x.kind)-rank(y.kind)||(y.r-x.r)||(x.cu-y.cu)||(x.cv-y.cv));
+  let nh=0,nbss=0;
+  cyl.forEach(f=>{
+    if(f.kind==='hole'){if(nh<12)f.hi=nh++;else f.kind='arc'}
+    if(f.kind==='boss'){if(nbss<4)f.di=nbss++;else f.kind='arc'}
+  });
+  cyl.forEach(f=>{if(f.kind==='arc'){f.bu=f.bu||0;f.bv=f.bv||0}else{f.bu=0;f.bv=0}});
+  cyl.sort((x,y)=>rank(x.kind)-rank(y.kind)||(y.r-x.r)||(x.cu-y.cu)||(x.cv-y.cv));
+  const owner=new Int32Array(V).fill(-1);
+  cyl.forEach((f,i)=>{f.verts=[...f.pts].filter(vi=>owner[vi]<0);f.verts.forEach(vi=>{owner[vi]=i})});
+  const holes=cyl.filter(f=>f.kind==='hole'),bosses=cyl.filter(f=>f.kind==='boss');
+  // деталь, построенная вращением: внешний цилиндр на всю ширину
+  let round=-1;
+  bosses.forEach((f,i)=>{if(round<0&&2*f.r>=.9*dim[f.u]&&2*f.r>=.9*dim[f.v])round=i});
+  // ---- уклоны: наклонные плоские грани ----
+  const grp=new Map();
+  for(let t=0;t<T;t++){
+    if(area[t]<=0)continue;
+    const nx=nrm[t*3],ny=nrm[t*3+1],nz=nrm[t*3+2],n=[nx,ny,nz];
+    let c=-1;for(let k=0;k<3;k++)if(Math.abs(n[k])<.02)c=c<0?k:-2;
+    if(c<0)continue;
+    const u=(c+1)%3,v=(c+2)%3,au=Math.abs(n[u]),av=Math.abs(n[v]),mxn=Math.max(au,av),mnn=Math.min(au,av);
+    if(mnn/mxn<.0524||mnn/mxn>1.7)continue;
+    const a0=I[t*3]*3,d=n[0]*U[a0]+n[1]*U[a0+1]+n[2]*U[a0+2];
+    const key=c+'|'+Math.round(n[u]*100)+'|'+Math.round(n[v]*100)+'|'+Math.round(d/.4);
+    let g=grp.get(key);if(!g){g={c,u,v,nu:0,nv:0,d,a:0,tris:[]};grp.set(key,g)}
+    g.a+=area[t];g.nu+=n[u]*area[t];g.nv+=n[v]*area[t];g.tris.push(t);
+  }
+  const faces=[];
+  [...grp.values()].sort((x,y)=>y.a-x.a).forEach(g=>{
+    if(g.a<.02*tot)return;
+    const nu=g.nu/g.a,nv=g.nv/g.a,l=Math.hypot(nu,nv);
+    const m=faces.find(f=>f.c===g.c&&Math.abs(f.nu-nu/l)<.012&&Math.abs(f.nv-nv/l)<.012&&Math.abs(f.d-g.d)<.6);
+    if(m){m.tris=m.tris.concat(g.tris);m.a+=g.a}else faces.push({c:g.c,u:g.u,v:g.v,nu:nu/l,nv:nv/l,d:g.d,a:g.a,tris:g.tris});
+  });
+  const slopes=[];
+  faces.forEach(f=>{
+    const w=Math.abs(f.nu)>=Math.abs(f.nv)?f.u:f.v,o=w===f.u?f.v:f.u,nw=w===f.u?f.nu:f.nv,no=w===f.u?f.nv:f.nu;
+    const m0=-no/nw,a0=Math.atan(Math.abs(m0));
+    const ids=new Set();f.tris.forEach(t=>{for(let e=0;e<3;e++)ids.add(I[t*3+e])});
+    const verts=[...ids];
+    // шарнир уклона — конец грани, примыкающий к основанию (нижний при наклоне наружу в +w, верхний при -w)
+    let wb=nw>0?1e9:-1e9,up=0;
+    verts.forEach(i=>{const x=U[i*3+w];if(nw>0?x<wb:x>wb)wb=x});
+    let cn=0;verts.forEach(i=>{if(Math.abs(U[i*3+w]-wb)<1e-4){up+=U[i*3+o];cn++}});up/=cn||1;
+    let s=slopes.find(x=>x.w===w&&x.u===o&&x.c===f.c&&Math.abs(x.a0-a0)<.012);
+    if(!s){if(slopes.length>=4)return;s={c:f.c,w,u:o,a0,faces:[]};slopes.push(s)}
+    let umin=1e9,umax=-1e9;verts.forEach(i=>{const x=U[i*3+o];if(x<umin)umin=x;if(x>umax)umax=x});
+    s.nw=nw>0?1:-1;
+    if(s.faces.length<6)s.faces.push({verts:Int32Array.from(verts),m0,up,wp:wb,umin,umax});
+  });
+  return {c0,dim,mn,mx,V,T,cyl,holes,bosses,round,slopes,owner};
+}
+// ---- применение параметров ----
+function geoApply(U,G,st,W){
+  const V=U.length/3,c0=G.c0,S=[st.U*st.k[0],st.U*st.k[1],st.U*st.k[2]];
+  for(let i=0;i<V;i++)for(let k=0;k<3;k++)W[i*3+k]=c0[k]+S[k]*(U[i*3+k]-c0[k]);
+  G.cyl.forEach(f=>{
+    const u=f.u,v=f.v,rf=st.U*(f.kind==='hole'?st.hf[f.hi]:(f.kind==='boss'?st.df[f.di]:1));
+    let cu=c0[u]+S[u]*(f.cu-c0[u]),cv=c0[v]+S[v]*(f.cv-c0[v]);
+    if(f.kind==='arc'){
+      if(f.bu){const pu=c0[u]+S[u]*(f.cu+f.bu*f.r-c0[u]);cu=pu-f.bu*f.r*rf}
+      if(f.bv){const pv=c0[v]+S[v]*(f.cv+f.bv*f.r-c0[v]);cv=pv-f.bv*f.r*rf}
+    }
+    for(let q=0;q<f.verts.length;q++){
+      const i=f.verts[q];
+      W[i*3+u]=cu+(U[i*3+u]-f.cu)*rf;W[i*3+v]=cv+(U[i*3+v]-f.cv)*rf;
+    }
+  });
+  G.slopes.forEach((s,i)=>{
+    const w=s.w,u=s.u,Sw=S[w],Su=S[u],sf=st.sf[i];
+    if(Math.abs(sf-1)<1e-9)return;
+    const wbase=c0[w]+Sw*((s.nw>0?G.mn[w]:G.mx[w])-c0[w]),dcap=.5*G.dim[w]*Sw;
+    s.faces.forEach(fc=>{
+      const ms=fc.m0*Sw/Su,m1=ms*sf,ups=c0[u]+Su*(fc.up-c0[u]),wps=c0[w]+Sw*(fc.wp-c0[w]);
+      const u0=c0[u]+Su*(fc.umin-c0[u]),u1=c0[u]+Su*(fc.umax-c0[u]);
+      // не заходим на соседние параллельные грани того же уклона
+      const um=(u0+u1)/2,hm=wps+ms*(um-ups);let gap=1e9;
+      s.faces.forEach(g=>{if(g===fc)return;
+        const gm=c0[w]+Sw*(g.wp-c0[w])+g.m0*Sw/Su*(um-(c0[u]+Su*(g.up-c0[u])));
+        const d=s.nw>0?hm-gm:gm-hm;if(d>1e-3&&d<gap)gap=d});
+      const dlim=Math.min(dcap,.45*gap);
+      // смещение материала в точке (uu, ww): 0 вне грани, полное на самой грани, плавно затухает вглубь
+      const disp=(uu,ww)=>{
+        const x=Math.min(u1,Math.max(u0,uu)),h0=wps+ms*(x-ups);
+        const H0=s.nw>0?h0-wbase:wbase-h0,D=Math.max(1e-3,Math.min(H0>1e-6?H0:dlim,dlim));
+        const depth=s.nw>0?h0-ww:ww-h0;
+        if(depth<-1e-3)return 0;
+        let wt=Math.max(0,1-Math.max(0,depth)/D);
+        const du=uu<u0?u0-uu:(uu>u1?uu-u1:0);wt*=Math.max(0,1-du/D);
+        const sh=Math.max(-.95*D,Math.min(.95*D,(m1-ms)*(x-ups)));
+        return wt*sh;
+      };
+      for(let vi=0;vi<V;vi++){
+        if(G.owner[vi]>=0)continue;
+        W[vi*3+w]+=disp(W[vi*3+u],W[vi*3+w]);
+      }
+      G.cyl.forEach(f=>{
+        if(!f.verts.length)return;
+        let mu=0,mw=0;for(let q=0;q<f.verts.length;q++){mu+=W[f.verts[q]*3+u];mw+=W[f.verts[q]*3+w]}
+        mu/=f.verts.length;mw/=f.verts.length;
+        const d=disp(mu,mw);
+        if(d)for(let q=0;q<f.verts.length;q++)W[f.verts[q]*3+w]+=d;
+      });
+    });
+  });
+}
+// ---- описание параметров (хранится в файле модели) ----
+function geoMeta(G,st){
+  const deg=a=>a*180/Math.PI;
+  return {v:1,c0:G.c0.slice(),dim:G.dim.slice(),
+    hid:[0,1,2].map(a=>{const r=G.round>=0?G.bosses[G.round]:null;return r&&(a===r.u||a===r.v)?1:0}),
+    hole:G.holes.map(f=>({r:f.r,ax:f.ax})),boss:G.bosses.map(f=>({r:f.r,ax:f.ax})),
+    slope:G.slopes.map(s=>({u:s.u,w:s.w,a0:deg(s.a0)})),
+    st:geoState(G.holes.length,G.bosses.length,G.slopes.length)};
+}
+function geoState(nh,nb,ns){return {U:1,k:[1,1,1],hf:new Array(nh).fill(1),df:new Array(nb).fill(1),sf:new Array(ns).fill(1)}}
+const GAX='XYZ';
+const GL={
+  ru:{ax:['Длина','Ширина','Высота'],sc:'Масштаб, %',dia:'Диаметр',hole:'Отверстие',slope:'Уклон',plane:'плоскость'},
+  en:{ax:['Length','Width','Height'],sc:'Scale, %',dia:'Diameter',hole:'Hole',slope:'Slope',plane:'plane'},
+  he:{ax:['אורך','רוחב','גובה'],sc:'קנה מידה, %',dia:'קוטר',hole:'חור',slope:'שיפוע',plane:'מישור'}
+};
+function geoParams(g){
+  const L=[],lb=f=>({ru:f('ru'),en:f('en'),he:f('he')});
+  L.push({key:'sc',kind:'sc',unit:'pct',min:30,max:300,def:g.st.U*100,lab:lb(l=>GL[l].sc)});
+  for(let a=0;a<3;a++)if(!g.hid[a])L.push({key:'k'+GAX[a].toLowerCase(),kind:'ax',a,unit:'mm',min:g.dim[a]*.3,max:g.dim[a]*3,def:g.dim[a]*g.st.U*g.st.k[a],lab:lb(l=>GL[l].ax[a])});
+  [[0,1],[0,2],[1,2]].forEach(([a,b])=>{
+    if(g.hid[a]||g.hid[b])return;
+    L.push({key:'p'+GAX[a].toLowerCase()+GAX[b].toLowerCase(),kind:'pr',a,b,unit:'pct',min:30,max:300,def:(g.st.k[a]+g.st.k[b])/2*100,lab:lb(l=>GL[l].ax[a]+' + '+GL[l].ax[b]+', %')});
+  });
+  g.boss.forEach((f,i)=>L.push({key:'d'+i,kind:'dm',i,unit:'mm',min:f.r*.6,max:f.r*6,def:2*f.r*g.st.U*g.st.df[i],lab:lb(l=>GL[l].dia+(g.boss.length>1?' '+(i+1):''))}));
+  g.hole.forEach((f,i)=>L.push({key:'h'+i,kind:'ho',i,unit:'mm',min:Math.max(.4,f.r*.6),max:f.r*6,def:2*f.r*g.st.U*g.st.hf[i],lab:lb(l=>GL[l].hole+' '+(i+1))}));
+  const cnt={};
+  g.slope.forEach((s,i)=>{
+    const pl=[s.u,s.w].sort().map(x=>GAX[x]).join('–');cnt[pl]=(cnt[pl]||0)+1;
+  });
+  const seen={};
+  g.slope.forEach((s,i)=>{
+    const pl=[s.u,s.w].sort().map(x=>GAX[x]).join('–');seen[pl]=(seen[pl]||0)+1;
+    L.push({key:'sl'+i,kind:'sp',i,unit:'deg',min:Math.max(.5,s.a0-10),max:Math.min(60,s.a0+10),def:geoAngle(g,g.st,i),lab:lb(l=>GL[l].slope+' ('+GL[l].plane+' '+pl+')'+(cnt[pl]>1?' '+seen[pl]:''))});
+  });
+  return L;
+}
+const gclamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+// текущий угол уклона с учётом масштабирования осей и множителя уклона
+function geoAngle(g,st,i){const s=g.slope[i];return Math.atan(Math.tan(s.a0*Math.PI/180)*(st.k[s.w]/st.k[s.u])*st.sf[i])*180/Math.PI}
+function geoSet(g,st,key,val){
+  if(key==='sc')st.U=gclamp(val/100,.3,3);
+  else if(key[0]==='k'){const a=GAX.toLowerCase().indexOf(key[1]);st.k[a]=gclamp(val/(g.dim[a]*st.U),.25,4)}
+  else if(key[0]==='p'){const a=GAX.toLowerCase().indexOf(key[1]),b=GAX.toLowerCase().indexOf(key[2]);st.k[a]=st.k[b]=gclamp(val/100,.25,4)}
+  else if(key[0]==='d'){const i=+key.slice(1);st.df[i]=gclamp(val/(2*g.boss[i].r*st.U),.2,5)}
+  else if(key[0]==='h'){const i=+key.slice(1);st.hf[i]=gclamp(val/(2*g.hole[i].r*st.U),.2,5)}
+  else if(key.slice(0,2)==='sl'){const i=+key.slice(2),s=g.slope[i];st.sf[i]=gclamp(Math.tan(gclamp(val,.5,70)*Math.PI/180)/(Math.tan(s.a0*Math.PI/180)*(st.k[s.w]/st.k[s.u])),.2,5)}
+}
+function geoVals(g,st){const o={};geoParams({...g,st}).forEach(p=>{o[p.key]=p.def});return o}
+
+function geoOff(e){
+  if(e.ui&&Array.isArray(e.ui.off))return new Set(e.ui.off);
+  return new Set(geoParams(e.geo).filter(p=>p.kind==='pr').map(p=>p.key));
+}
+// запись модели (формат objmodel v6: масштаб, оси, диаметры, отверстия, уклоны)
+function buildEntryGeo(o){
+  const c=o.canon,big=c.U.length/3>65535;
+  const idx=big?Uint32Array.from(c.I):Uint16Array.from(c.I);
+  return {fmt:'objmodel',ver:6,thn:1,desc:o.desc||{},id:o.id,name:o.name,tag:o.tag,color:o.color,z:!!o.z,s:!!o.s,
+    src:o.src,tris:c.I.length/3,added:new Date().toISOString().slice(0,10),thumb:o.thumb||'',
+    pos:b64enc(c.U),idx:b64enc(idx),ib:big?4:2,geo:o.geo,ui:o.ui||{off:[],lab:{},rg:{}}};
+}
+
+// ---------- FreeCAD HTML: чтение экспорта (сжатый и обычный формат) ----------
+function parseFreeCAD(txt){
+  const a=txt.indexOf('const data = ');if(a<0)throw new Error('нет блока data');
+  const st=a+13,en=txt.indexOf('\n',st),d=JSON.parse(txt.slice(st,en).trim().replace(/;$/,'')),V=[],F=[];let off=0;
+  for(const o of d.objects){
+    let v,f;
+    if(d.compressed){
+      const bs=d.base,bf=d.baseFloat,bc=bs.length,fc=bf.length;
+      const bd=s=>{const r=[],L=parseInt(s[0]);for(let i=1;i<s.length;i+=L){const t=s.substring(i,i+L).trim();let x=0;for(let j=0;j<t.length;j++)x+=bs.indexOf(t[j])*Math.pow(bc,j);r.push(x)}return r};
+      const parts=[];
+      for(let i=0;i<o.floats.length;i+=4){const h=o.floats.substring(i,i+4).trim();let q=0;for(let j=0;j<h.length;j++)q+=bs.indexOf(h[j])*Math.pow(bc,j);let u='';for(let j=0;j<7;j++){u=bf[q%fc]+u;q=Math.floor(q/fc)}parts.push(u)}
+      let ns=parts.join(''),tc=0;for(let j=1;j<7;j++)if(ns[ns.length-j]===bf[0])tc++;ns=ns.substring(0,ns.length-tc);
+      const fl=JSON.parse('['+ns+']');v=bd(o.verts).map(x=>fl[x]);f=bd(o.facets);
+    }else{v=o.verts.map(parseFloat);f=o.facets}
+    for(const x of v)V.push(x);for(const x of f)F.push(x+off);off+=v.length/3;
+  }
+  return {U:Float32Array.from(V),I:Uint32Array.from(F),n:F.length/3};
+}
+// ---------- упрощение резьбы: резьбовая зона заменяется гладким цилиндром (символ резьбы) ----------
+// Резьба = связная группа «винтовых» граней (нормаль не параллельна и не перпендикулярна оси),
+// вытянутая вдоль оси и кольцевая по сечению. Остальная геометрия не меняется.
+function simplifyThreads(U0,I0){
+  const m=new Map(),rm=new Int32Array(U0.length/3),P=[];
+  for(let i=0;i<rm.length;i++){const k=Math.round(U0[i*3]*1e4)+','+Math.round(U0[i*3+1]*1e4)+','+Math.round(U0[i*3+2]*1e4);let id=m.get(k);if(id===undefined){id=P.length/3;m.set(k,id);P.push(U0[i*3],U0[i*3+1],U0[i*3+2])}rm[i]=id}
+  const NV=P.length/3,I=[];
+  for(let f=0;f<I0.length;f+=3){const a=rm[I0[f]],b=rm[I0[f+1]],c=rm[I0[f+2]];if(a!==b&&b!==c&&a!==c)I.push(a,b,c)}
+  const nF=I.length/3,nn=new Float32Array(nF*3);
+  for(let f=0;f<nF;f++){const a=I[f*3]*3,b=I[f*3+1]*3,c=I[f*3+2]*3,ux=P[b]-P[a],uy=P[b+1]-P[a+1],uz=P[b+2]-P[a+2],wx=P[c]-P[a],wy=P[c+1]-P[a+1],wz=P[c+2]-P[a+2];
+    const x=uy*wz-uz*wy,y=uz*wx-ux*wz,z=ux*wy-uy*wx,l=Math.hypot(x,y,z)||1;nn[f*3]=x/l;nn[f*3+1]=y/l;nn[f*3+2]=z/l}
+  const zid=new Int16Array(NV),zones=[];
+  for(let A=0;A<3;A++){
+    const B=(A+1)%3,C=(A+2)%3,par=new Int32Array(NV).map((_,i)=>i),fd=x=>{while(par[x]!==x){par[x]=par[par[x]];x=par[x]}return x},mid=[];
+    for(let f=0;f<nF;f++){const na=Math.abs(nn[f*3+A]);if(na>.12&&na<.97){mid.push(f);par[fd(I[f*3])]=fd(I[f*3+1]);par[fd(I[f*3+1])]=fd(I[f*3+2])}}
+    const cp=new Map();
+    for(const f of mid){const r=fd(I[f*3]);let q=cp.get(r);if(!q)cp.set(r,q={n:0,mn:[1e9,1e9,1e9],mx:[-1e9,-1e9,-1e9]});q.n++;
+      for(let j=0;j<3;j++){const v=I[f*3+j]*3;for(let k=0;k<3;k++){q.mn[k]=Math.min(q.mn[k],P[v+k]);q.mx[k]=Math.max(q.mx[k],P[v+k])}}}
+    const cand=[];
+    for(const [r,q] of cp){
+      if(q.n<150)continue;
+      const eb=q.mx[B]-q.mn[B],ec=q.mx[C]-q.mn[C],ez=q.mx[A]-q.mn[A];
+      if(Math.abs(eb-ec)>.08*Math.max(eb,ec))continue; // должно быть полное кольцо
+      cand.push({r,cb:(q.mn[B]+q.mx[B])/2,cc:(q.mn[C]+q.mx[C])/2,zl:q.mn[A],zh:q.mx[A],ez,rl:1e9,rh:-1e9});
+    }
+    if(!cand.length)continue;
+    const byRoot=new Map(cand.map(c=>[c.r,c]));
+    for(const f of mid){const c=byRoot.get(fd(I[f*3]));if(!c)continue;for(let j=0;j<3;j++){const v=I[f*3+j]*3,r=Math.hypot(P[v+B]-c.cb,P[v+C]-c.cc);c.rl=Math.min(c.rl,r);c.rh=Math.max(c.rh,r)}}
+    for(const c of cand){
+      const depth=c.rh-c.rl,rmid=(c.rl+c.rh)/2;
+      if(depth<.02||depth>.3*rmid||c.ez<3*depth)continue;
+      zones.push({A,B,C,cb:c.cb,cc:c.cc,rm:rmid,rl:c.rl,rh:c.rh,zl:c.zl,zh:c.zh,tr:Math.max(.005,depth*.03)});
+    }
+  }
+  // вершины, попадающие в резьбовую зону
+  let nz=0;
+  zones.forEach((z,zi)=>{let hit=0;
+    for(let v=0;v<NV;v++){if(zid[v])continue;const a=P[v*3+z.A];if(a<z.zl-1e-3||a>z.zh+1e-3)continue;
+      const r=Math.hypot(P[v*3+z.B]-z.cb,P[v*3+z.C]-z.cc);if(r<z.rl-z.tr||r>z.rh+z.tr)continue;zid[v]=zi+1;hit++}
+    z.hit=hit;if(hit)nz++});
+  // кластеризация: каждая зона -> два кольца вершин (низ и верх) на среднем радиусе
+  const map=new Int32Array(NV).map((_,i)=>i),nm=new Map(),Q=Array.from(P);
+  for(let v=0;v<NV;v++){const zi=zid[v];if(!zi)continue;
+    const z=zones[zi-1],N=2*Math.ceil(Math.max(24,Math.PI*Math.sqrt(z.rm/.03))/2),dT=2*Math.PI/N;
+    const th=Math.atan2(P[v*3+z.C]-z.cc,P[v*3+z.B]-z.cb),k=((Math.round(th/dT)%N)+N)%N,top=(P[v*3+z.A]-z.zl)>(z.zh-P[v*3+z.A])?1:0,key=zi+'_'+k+'_'+top;
+    let id=nm.get(key);
+    if(id===undefined){id=Q.length/3;nm.set(key,id);const p=[0,0,0];p[z.A]=top?z.zh:z.zl;p[z.B]=z.cb+z.rm*Math.cos(k*dT);p[z.C]=z.cc+z.rm*Math.sin(k*dT);Q.push(p[0],p[1],p[2])}
+    map[v]=id}
+  const out=[],seen=new Set();
+  for(let f=0;f<nF;f++){const a=map[I[f*3]],b=map[I[f*3+1]],c=map[I[f*3+2]];if(a===b||b===c||a===c)continue;
+    const key=a<b?(a<c?a+','+(b<c?b+','+c:c+','+b):c+','+a+','+b):(b<c?b+','+(a<c?a+','+c:c+','+a):c+','+b+','+a);
+    if(seen.has(key))continue;seen.add(key);out.push(a,b,c)}
+  return {U:Float32Array.from(Q),I:Uint32Array.from(out),zones:nz};
+}
+</script>
+<script type="text/plain" id="site-adapter-src">/*OBJRT:START v6*/
+const OBJRT = (function () {
+'use strict';
+
+function faceNormals(pos,n,area){
+  const fn=new Float32Array(n*3);
+  for(let f=0;f<n;f++){
+    const o=f*9,ax=pos[o+3]-pos[o],ay=pos[o+4]-pos[o+1],az=pos[o+5]-pos[o+2],bx=pos[o+6]-pos[o],by=pos[o+7]-pos[o+1],bz=pos[o+8]-pos[o+2];
+    const x=ay*bz-az*by,y=az*bx-ax*bz,z=ax*by-ay*bx,l=Math.hypot(x,y,z)||1;
+    fn[f*3]=x/l;fn[f*3+1]=y/l;fn[f*3+2]=z/l;if(area)area[f]=l/2;
+  }
+  return fn;
+}
+// поиск ключевых плоскостей по каждой оси и построение параметров
+function detect(pos,n,opt){
+  const split=!!(opt&&opt.split); // split: каждая стенка отдельно (без зеркальной симметрии)
+  const area=new Float32Array(n),fn=faceNormals(pos,n,area),res=[];
+  const NV=pos.length/3,wid=new Int32Array(NV),wm=new Map(),wp=[];
+  for(let v=0;v<NV;v++){const k=Math.round(pos[v*3]*1e4)+','+Math.round(pos[v*3+1]*1e4)+','+Math.round(pos[v*3+2]*1e4);
+    let id=wm.get(k);if(id===undefined){id=wp.length/3;wm.set(k,id);wp.push(pos[v*3],pos[v*3+1],pos[v*3+2])}wid[v]=id}
+  let e0=0;for(let a=0;a<3;a++){let l=Infinity,h=-Infinity;for(let i=a;i<pos.length;i+=3){l=Math.min(l,pos[i]);h=Math.max(h,pos[i])}e0=Math.max(e0,h-l)}
+  const tau=.035*e0,par=Int32Array.from({length:wp.length/3},(_,i)=>i),find=x=>{while(par[x]!==x){par[x]=par[par[x]];x=par[x]}return x};
+  for(let f=0;f<n;f++)for(let i=0;i<3;i++){
+    const a=wid[f*3+i],b=wid[f*3+(i+1)%3];
+    if(Math.hypot(wp[a*3]-wp[b*3],wp[a*3+1]-wp[b*3+1],wp[a*3+2]-wp[b*3+2])<tau)par[find(a)]=find(b);
+  }
+  // плотные участки мелкой геометрии (например, выпуклый текст) двигаются как жёсткий блок
+  const cm=new Map();
+  for(let i=0;i<wp.length/3;i++){const r=find(i);let c=cm.get(r);if(!c)cm.set(r,c={n:0,mn:[1e9,1e9,1e9],mx:[-1e9,-1e9,-1e9]});c.n++;for(let k=0;k<3;k++){c.mn[k]=Math.min(c.mn[k],wp[i*3+k]);c.mx[k]=Math.max(c.mx[k],wp[i*3+k])}}
+  const dense=new Set();
+  for(const [r,c] of cm){if(c.n<200)continue;const ex=c.mx.map((x,k)=>x-c.mn[k]).sort((x,y)=>y-x);
+    if(c.n/Math.max(ex[0]*ex[1],1e-6)*tau*tau>20)dense.add(r)}
+  const cid=new Int32Array(NV);for(let v=0;v<NV;v++){const r=find(wid[v]);cid[v]=dense.has(r)?r:-1}
+  for(let a=0;a<3;a++){
+    let lo=Infinity,hi=-Infinity;
+    for(let i=a;i<pos.length;i+=3){lo=Math.min(lo,pos[i]);hi=Math.max(hi,pos[i])}
+    const bins=new Map();
+    for(let f=0;f<n;f++){
+      if(Math.abs(fn[f*3+a])<.999)continue;
+      const c0=pos[f*9+a];if(Math.abs(c0-pos[f*9+3+a])>1e-3||Math.abs(c0-pos[f*9+6+a])>1e-3)continue;
+      const k=Math.round(c0*10),b=bins.get(k)||{a:0,s:0,n:0};b.a+=area[f];b.s+=c0*area[f];b.n+=area[f]*Math.sign(fn[f*3+a]);bins.set(k,b);
+    }
+    const ks=[...bins.keys()].sort((x,y)=>x-y),grp=[];
+    for(const k of ks){const b=bins.get(k),g=grp[grp.length-1];
+      if(g&&k-g.k<=1){g.a+=b.a;g.s+=b.s;g.n+=b.n;g.k=k}else grp.push({a:b.a,s:b.s,n:b.n,k})}
+    const mx=Math.max(0,...grp.map(g=>g.a));
+    let P=grp.filter(g=>g.a>=mx*.1).map(g=>g.s/g.a);
+    // стенки: наружная плоскость на краю детали + ближайшая внутренняя плоскость с противоположной нормалью
+    const gv=grp.map(g=>({v:g.s/g.a,a:g.a,n:g.n})),ex0=hi-lo;let wLo=null,wHi=null;
+    const lowOut=gv.find(g=>Math.abs(g.v-lo)<.3&&g.n<0&&g.a>=mx*.1);
+    if(lowOut){const w=gv.find(g=>g.v>lowOut.v+.3&&g.n>0&&g.a>=mx*.015&&g.v-lowOut.v<=.33*ex0);if(w)wLo=w.v}
+    const hiOut=gv.slice().reverse().find(g=>Math.abs(g.v-hi)<.3&&g.n>0&&g.a>=mx*.1);
+    if(hiOut){const w=gv.slice().reverse().find(g=>g.v<hiOut.v-.3&&g.n<0&&g.a>=mx*.015&&hiOut.v-g.v<=.33*ex0);if(w)wHi=w.v}
+    [wLo,wHi].forEach(w=>{if(w!==null&&!P.some(x=>Math.abs(x-w)<.3))P.push(w)});
+    P.sort((x,y)=>x-y);
+    if(!P.length||P[0]-lo>.3)P.unshift(lo);
+    if(hi-P[P.length-1]>.3)P.push(hi);
+    const k=P.length,c=(lo+hi)/2;
+    let sym=!split&&k>=4&&k%2===0;
+    for(let i=0;sym&&i<k/2;i++)if(Math.abs((P[i]-c)+(P[k-1-i]-c))>.2)sym=false;
+    const A={a,sym,c,P,lo,hi};
+    if(sym){
+      const h=P.slice(k/2).map(p=>p-c);A.bp=[0,...h];
+      A.segs=[2*h[0],...h.slice(1).map((v,i)=>v-h[i])];
+      A.names=A.segs.map((_,i)=>i===0?'Внутренняя ширина':(A.segs.length===2?'Толщина стенки':'Стенка '+i));
+    }else{
+      A.bp=P.slice();A.segs=P.slice(1).map((v,i)=>v-P[i]);
+      A.names=A.segs.map((_,i)=>'Участок '+(i+1));
+    }
+    A.wall=sym?A.segs.map((_,i)=>i>=1):A.segs.map((_,i)=>{const L=A.segs.length;return L>1&&((wLo!==null&&i===0&&Math.abs(P[1]-wLo)<.3)||(wHi!==null&&i===L-1&&Math.abs(P[L-1]-wHi)<.3))});
+    A.inner=A.segs.map((_,i)=>!sym&&A.segs.length===3&&A.wall[0]&&A.wall[2]&&i===1);
+    A.vals=A.segs.slice();A.totName=['Внешняя длина','Внешняя ширина','Внешняя высота'][a];
+    A.rng=A.segs.map((s,i)=>sym?(i===0?[s*.5,s*2]:[Math.max(1,s*.5),s*2.5]):(A.wall[i]?[Math.max(.5,s*.5),s*2.5]:[s*.5,s*2.5]));
+    const T0=sym?A.segs[0]+2*A.segs.slice(1).reduce((q,x)=>q+x,0):A.segs.reduce((q,x)=>q+x,0);
+    A.trng=sym?[A.rng[0][0]+2*A.rng.slice(1).reduce((q,x)=>q+x[0],0),A.rng[0][1]+2*A.rng.slice(1).reduce((q,x)=>q+x[1],0)]:[T0*.7,T0*1.4];
+    const N=NV;A.idx=new Uint8Array(N);A.sg=new Int8Array(N);A.f=new Float32Array(N);
+    const U=new Float32Array(N);
+    for(let v=0;v<N;v++){let u=pos[v*3+a];if(sym){u-=c;A.sg[v]=u<0?-1:1;u=Math.abs(u)}U[v]=u}
+    // жёсткие блоки по этой оси: скругления, фаски, текст и другие мелкие детали двигаются целиком и не деформируются
+    const ext=hi-lo,rig=new Set();
+    for(const [rt,cc] of cm){if(dense.has(rt)||(cc.n>=3&&cc.mx[a]-cc.mn[a]<=.2*ext))rig.add(rt)}
+    const cida=new Int32Array(N);for(let v=0;v<N;v++){const rt=find(wid[v]);cida[v]=rig.has(rt)?rt:-1}
+    const cs=new Map();
+    for(let v=0;v<N;v++)if(cida[v]>=0){const u=sym?pos[v*3+a]-c:pos[v*3+a];let q=cs.get(cida[v]);if(!q)cs.set(cida[v],q={s:0,n:0,mn:u,mx:u});q.s+=u;q.n++;if(u<q.mn)q.mn=u;if(u>q.mx)q.mx=u}
+    if(sym){
+      const su=Array.from(U).sort((x,y)=>x-y).filter((x,i,r)=>!i||x-r[i-1]>1e-3),cuts=[];
+      for(let j=0;j<A.bp.length-1;j++){
+        const lo2=A.bp[j],hi2=A.bp[j+1],L=hi2-lo2,mg=L>20?.15*L:0,pts=[lo2,...su.filter(x=>x>lo2+1e-3&&x<hi2-1e-3),hi2];
+        let bg=0,cut=(lo2+hi2)/2;
+        for(let i=1;i<pts.length;i++){const m=(pts[i]+pts[i-1])/2;if(m<lo2+mg||m>hi2-mg)continue;if(pts[i]-pts[i-1]>bg){bg=pts[i]-pts[i-1];cut=m}}
+        cuts.push(cut);
+      }
+      const zone=u=>{let j=0;while(j<cuts.length&&u>cuts[j])j++;return j};
+      // блок привязывается к ключевой плоскости, которой он касается (скругление едет вместе со своей стенкой)
+      const bind=q=>{
+        if(q.mn*q.mx<0)return -1;
+        const lo2=Math.min(Math.abs(q.mn),Math.abs(q.mx)),hi2=Math.max(Math.abs(q.mn),Math.abs(q.mx));let jl=-1,jh=-1;
+        for(let k=1;k<A.bp.length;k++){if(Math.abs(hi2-A.bp[k])<.3)jh=k;if(Math.abs(lo2-A.bp[k])<.3)jl=k}
+        if(jh>=0&&jl<0)return jh;if(jl>=0&&jh<0)return jl;if(jh>=0&&jh===jl)return jh;return -1;
+      };
+      for(let v=0;v<N;v++){A.idx[v]=zone(U[v]);
+        if(cida[v]>=0){const q=cs.get(cida[v]),m=q.s/q.n,j=bind(q);A.idx[v]=j>=0?j:zone(Math.abs(m));A.sg[v]=m<0?-1:1}}
+    }else{
+      const L=hi-lo,r0=lo+.15*L,r1=hi-.15*L,fr=x=>Math.min(1,Math.max(0,(x-r0)/(r1-r0)));
+      A.T0=A.segs.reduce((q,x)=>q+x,0);
+      for(let v=0;v<N;v++){A.f[v]=fr(U[v]);if(cida[v]>=0){const q=cs.get(cida[v]);A.f[v]=fr(q.s/q.n)}}
+      // режим «по участкам»: каждая деталь привязана к участку между ключевыми плоскостями
+      A.sj=new Uint8Array(N);A.st=new Float32Array(N);
+      for(let v=0;v<N;v++){
+        let ref=U[v];
+        if(cida[v]>=0){
+          const q=cs.get(cida[v]);ref=q.s/q.n;let jl=-1,jh=-1;
+          for(let k=0;k<A.bp.length;k++){if(Math.abs(q.mx-A.bp[k])<.3)jh=k;if(Math.abs(q.mn-A.bp[k])<.3)jl=k}
+          if((jh>=0&&jl<0)||(jl>=0&&jh<0)||(jh>=0&&jh===jl))ref=A.bp[jh>=0?jh:jl];
+        }
+        let j=0;while(j<A.bp.length-2&&ref>A.bp[j+1])j++;
+        const dl=A.bp[j+1]-A.bp[j];A.sj[v]=j;A.st[v]=dl>1e-9?Math.min(1,Math.max(0,(ref-A.bp[j])/dl)):0;
+      }
+    }
+    A.seg=false;A.free=null;
+    res.push(A);
+  }
+  return res;
+}
+function newBP(A){
+  const v=A.vals,o=[];
+  if(A.sym){o.push(0,v[0]/2);for(let i=1;i<v.length;i++)o.push(o[o.length-1]+v[i])}
+  else{o.push(A.P[0]);for(let i=0;i<v.length;i++)o.push(o[o.length-1]+v[i])}
+  return o;
+}
+function total(A){return A.sym?A.vals[0]+2*A.vals.slice(1).reduce((s,x)=>s+x,0):A.vals.reduce((s,x)=>s+x,0)}
+function setSeg(A,i,v){A.vals[i]=Math.min(A.rng[i][1],Math.max(A.rng[i][0],v))}
+function setTotal(A,T){
+  if(A.sym){setSeg(A,0,T-2*A.vals.slice(1).reduce((s,x)=>s+x,0))}
+  else if(A.seg){
+    T=Math.min(A.trng[1],Math.max(A.trng[0],T));
+    const fr=A.free||A.vals.map(()=>true),all=A.vals.map((_,i)=>i);
+    let idx=all.filter(i=>fr[i]&&!(A.wall&&A.wall[i]));
+    if(!idx.length)idx=all.filter(i=>fr[i]);
+    if(!idx.length)return;
+    let Sf=0,So=0;A.vals.forEach((x,i)=>{if(idx.indexOf(i)>=0)Sf+=x;else So+=x});
+    if(Sf<=0)return;
+    const k=(T-So)/Sf;
+    idx.forEach(i=>{A.vals[i]=Math.min(A.rng[i][1],Math.max(A.rng[i][0],A.vals[i]*k))});
+  }
+  else{T=Math.min(A.trng[1],Math.max(A.trng[0],T));let m=0;A.vals.forEach((x,i)=>{if(x>A.vals[m])m=i});
+    A.vals[m]=Math.max(.1,T-A.vals.reduce((s,x,i)=>s+(i===m?0:x),0))}
+}
+function deform(pos0,out,AX){
+  out.set(pos0);
+  for(const A of AX){
+    const a=A.a,N=A.idx.length;
+    if(A.sym){const nb=newBP(A),d=nb.map((x,j)=>x-A.bp[j]);for(let v=0;v<N;v++)out[v*3+a]+=A.sg[v]*d[A.idx[v]]}
+    else if(A.seg){const nb=newBP(A);for(let v=0;v<N;v++){const j=A.sj[v],t=A.st[v];out[v*3+a]+=nb[j]+t*(nb[j+1]-nb[j])-(A.bp[j]+t*(A.bp[j+1]-A.bp[j]))}}
+    else{const D=total(A)-A.T0;for(let v=0;v<N;v++)out[v*3+a]+=A.f[v]*D}
+  }
+}
+// ---------- разбор OBJ ----------
+function parseOBJ(t){
+  const V=[],o=[];
+  for(const line of t.split(/\r?\n/)){
+    const c=line.charCodeAt(0);
+    if(c!==118&&c!==102&&c!==32&&c!==9)continue; // быстрый отсев: только строки v и f
+    const p=line.trim().split(/\s+/);
+    if(p[0]==='v')V.push(+p[1],+p[2],+p[3]);
+    else if(p[0]==='f'){
+      const ix=p.slice(1).map(s=>{const i=parseInt(s);return i<0?V.length/3+i:i-1});
+      for(let k=1;k<ix.length-1;k++)for(const i of [ix[0],ix[k],ix[k+1]])o.push(V[i*3],V[i*3+1],V[i*3+2]);
+    }
+  }
+  return {pos:Float32Array.from(o),n:o.length/9};
+}
+// ---------- сварка вершин: индексная форма (компактная) ----------
+function weld(pos){
+  const m=new Map(),U=[],I=[];
+  for(let i=0;i<pos.length;i+=3){
+    const k=Math.round(pos[i]*1e4)+','+Math.round(pos[i+1]*1e4)+','+Math.round(pos[i+2]*1e4);
+    let id=m.get(k);
+    if(id===undefined){id=U.length/3;m.set(k,id);U.push(pos[i],pos[i+1],pos[i+2])}
+    I.push(id);
+  }
+  const T=[];
+  for(let f=0;f<I.length;f+=3){const a=I[f],b=I[f+1],c=I[f+2];if(a!==b&&b!==c&&a!==c)T.push(a,b,c)}
+  return {U:Float32Array.from(U),I:Uint32Array.from(T)};
+}
+function expand(U,I){
+  const o=new Float32Array(I.length*3);
+  for(let i=0;i<I.length;i++){o[i*3]=U[I[i]*3];o[i*3+1]=U[I[i]*3+1];o[i*3+2]=U[I[i]*3+2]}
+  return o;
+}
+// эталонная («каноническая») геометрия: и конвертер, и сайт работают с одним и тем же массивом
+function canon(pos){const w=weld(pos);return {U:w.U,I:w.I,pos:expand(w.U,w.I),n:w.I.length/3}}
+function b64enc(a){const u=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);let s='';for(let i=0;i<u.length;i+=32768)s+=String.fromCharCode.apply(null,u.subarray(i,i+32768));return btoa(s)}
+function b64dec(s){const b=atob(s),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+function slug(name){
+  const base=name.replace(/\.[^.]+$/,'');
+  const a=base.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  let h=5381;for(let i=0;i<base.length;i++)h=((h<<5)+h+base.charCodeAt(i))>>>0;
+  const pure=/^[\x20-\x7e]+$/.test(base)&&a;
+  return 'obj-'+(pure?a:(a?a+'-':'')+h.toString(36));
+}
+// ---------- параметры модели: список, подписи, видимость ----------
+const LBL={
+  he:{axis:['אורך','רוחב','גובה'],tot:['אורך חיצוני','רוחב חיצוני','גובה חיצוני'],inner:'מידה פנימית',wall:'עובי דופן',part:'קטע',thick:'עובי',all:'עובי כל הקירות, %',lo:['התחלה','התחלה','תחתית'],hi:['סוף','סוף','עליון']},
+  en:{axis:['Length','Width','Height'],tot:['Outer length','Outer width','Outer height'],inner:'inner size',wall:'wall thickness',part:'section',thick:'thickness',all:'All walls thickness, %',lo:['start','start','bottom'],hi:['end','end','top']},
+  ru:{axis:['Длина','Ширина','Высота'],tot:['Внешняя длина','Внешняя ширина','Внешняя высота'],inner:'внутренний размер',wall:'толщина стенки',part:'участок',thick:'толщина',all:'Толщина всех стенок, %',lo:['начало','начало','низ'],hi:['конец','конец','верх']}
+};
+// все возможные ползунки: s — сегменты симметричной оси, p — участки несимметричной оси, t — внешний размер
+function paramList(axes){
+  const o=[];
+  axes.forEach((ax,ai)=>{
+    if(ax.sym)for(let i=0;i<ax.n;i++)o.push({key:'a'+ai+'s'+i,ai,i,kind:'s',ax});
+    else if(ax.n>1)for(let i=0;i<ax.n;i++)o.push({key:'a'+ai+'s'+i,ai,i,kind:(ax.wall&&ax.wall[i])?'w':(ax.inner&&ax.inner[i]?'i':'p'),ax});
+    o.push({key:'a'+ai+'t',ai,i:-1,kind:'t',ax});
+  });
+  if(o.filter(isWall).length>1)o.unshift({key:'wall_all',ai:-1,i:-1,kind:'m',ax:null});
+  return o;
+}
+function defLabel(lang,p){
+  const L=LBL[lang]||LBL.en,ax=L.axis[p.ai]||'';
+  if(p.kind==='t')return L.tot[p.ai];
+  if(p.kind==='m')return L.all;
+  if(p.kind==='i')return ax+': '+L.inner;
+  if(p.kind==='w')return ax+': '+L.thick+' ('+(p.i===0?L.lo[p.ai]:L.hi[p.ai])+')';
+  if(p.kind==='p')return ax+': '+L.part+' '+(p.i+1);
+  return ax+': '+(p.i===0?L.inner:(p.ax.n===2?L.wall:L.wall+' '+p.i));
+}
+// выключенные ползунки; у старых моделей (без поля ui) участки несимметричных осей выключены
+function offSet(e){
+  let s;
+  if(e.ui&&Array.isArray(e.ui.off))s=new Set(e.ui.off);
+  else{s=new Set();paramList(e.axes).forEach(p=>{if(p.kind==='p')s.add(p.key)})}
+  if((e.ver||0)<4)s.add('wall_all');
+  return s;
+}
+function labelOf(e,p,lang){
+  const o=e.ui&&e.ui.lab&&e.ui.lab[p.key];
+  return (o&&o[lang])||defLabel(lang,p);
+}
+const isWall=p=>(p.kind==='s'&&p.i>=1)||p.kind==='w';
+// пропорциональное изменение всех видимых стенок: ws=[{key,orig,min,max}], dk — какую стенку двигает пользователь
+function wallScaleF(ws,f){
+  let fmin=0,fmax=Infinity;
+  ws.forEach(w=>{if(w.orig>0){fmin=Math.max(fmin,w.min/w.orig);fmax=Math.min(fmax,w.max/w.orig)}});
+  if(fmin<=fmax)f=Math.min(fmax,Math.max(fmin,f));
+  const o={};ws.forEach(w=>{o[w.key]=w.orig*f});return {vals:o,f};
+}
+function wallScale(ws,dk,v){const d=ws.find(w=>w.key===dk);if(!d||!(d.orig>0))return null;return wallScaleF(ws,v/d.orig).vals}
+// средний процент от исходной толщины (для общего ползунка стенок)
+function wallPct(ws,get){let s=0,n=0;ws.forEach(w=>{if(w.orig>0){s+=get(w.key)/w.orig;n++}});return n?s/n*100:100}
+// превью модели: серая «карта освещения» перекрашивается фильтром в цвет модели
+const NEUTRAL=215;
+function hexRGB(h){h=String(h||'#4a4d52').replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');const n=parseInt(h,16)||0;return [(n>>16)&255,(n>>8)&255,n&255]}
+function tintSvg(thumb,color,uid){
+  const c=hexRGB(color).map(v=>+(v/NEUTRAL).toFixed(4)),id='tn-'+String(uid).replace(/[^a-zA-Z0-9-]/g,'-');
+  return '<svg viewBox="0 0 120 120" fill="none"><defs><filter id="'+id+'" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="'+c[0]+' 0 0 0 0 0 '+c[1]+' 0 0 0 0 0 '+c[2]+' 0 0 0 0 0 1 0"/></filter></defs><image href="'+thumb+'" x="0" y="0" width="120" height="120" filter="url(#'+id+')"/></svg>';
+}
+function pick(o,lang){return (o&&(o[lang]||o.en||o.ru||o.he||Object.values(o)[0]))||''}
+// запись модели для сайта (формат objmodel v2)
+function buildEntry(o){
+  const c=o.canon,big=c.U.length/3>65535;
+  const idx=big?Uint32Array.from(c.I):Uint16Array.from(c.I);
+  return {
+    fmt:'objmodel',ver:4,split:o.split?1:0,thn:o.thn?1:0,desc:o.desc||{},id:o.id,name:o.name,tag:o.tag,color:o.color,z:!!o.z,s:!!o.s,
+    src:o.src,tris:c.I.length/3,added:new Date().toISOString().slice(0,10),thumb:o.thumb||'',
+    pos:b64enc(c.U),idx:b64enc(idx),ib:big?4:2,
+    ui:o.ui||{off:[],lab:{},rg:{},link:{show:true,on:false}},
+    axes:o.AX.map(A=>{
+      const def=A.vals.slice();
+      const rng=A.rng.map((r,i)=>[Math.min(r[0],def[i]),Math.max(r[1],def[i])]);
+      const T=total(A);
+      return {sym:!!A.sym,n:def.length,wall:A.wall||null,inner:A.inner||null,rng,trng:[Math.min(A.trng[0],T),Math.max(A.trng[1],T)],def,tdef:T,orig:A.segs.slice()};
+    })
+  };
+}
+// ===================== ГЕОМЕТРИЯ v2: масштаб, оси, диаметры, отверстия, уклоны =====================
+// U — уникальные вершины (Float32Array, x y z), I — индексы треугольников
+function geoKasa(U,pts,u,v){
+  let mu=0,mv=0;pts.forEach(i=>{mu+=U[i*3+u];mv+=U[i*3+v]});mu/=pts.length;mv/=pts.length;
+  let a11=0,a12=0,a13=0,a22=0,a23=0,a33=pts.length,b1=0,b2=0,b3=0;
+  pts.forEach(i=>{const x=U[i*3+u]-mu,y=U[i*3+v]-mv,z=x*x+y*y;
+    a11+=4*x*x;a12+=4*x*y;a13+=2*x;a22+=4*y*y;a23+=2*y;b1+=2*x*z;b2+=2*y*z;b3+=z});
+  const M=[[a11,a12,a13,b1],[a12,a22,a23,b2],[a13,a23,a33,b3]];
+  for(let c=0;c<3;c++){
+    let p=c;for(let r=c+1;r<3;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;
+    if(Math.abs(M[p][c])<1e-12)return null;
+    [M[c],M[p]]=[M[p],M[c]];
+    for(let r=0;r<3;r++)if(r!==c){const f=M[r][c]/M[c][c];for(let k=c;k<4;k++)M[r][k]-=f*M[c][k]}
+  }
+  const cx=M[0][3]/M[0][0],cy=M[1][3]/M[1][1],k=M[2][3]/M[2][2],r2=k+cx*cx+cy*cy;
+  if(!(r2>0))return null;
+  return {cu:cx+mu,cv:cy+mv,r:Math.sqrt(r2)};
+}
+function geoCover(U,pts,u,v,cu,cv){
+  const an=pts.map(i=>Math.atan2(U[i*3+v]-cv,U[i*3+u]-cu)).sort((x,y)=>x-y);
+  let mg=an[0]+2*Math.PI-an[an.length-1],mi=-1;
+  for(let i=0;i<an.length-1;i++){const g=an[i+1]-an[i];if(g>mg){mg=g;mi=i}}
+  const A=mi<0?an[0]:an[mi+1],B=mi<0?an[an.length-1]:an[mi];
+  return {cov:2*Math.PI-mg,A,B};
+}
+function geoDetect(U,I){
+  const V=U.length/3,T=I.length/3;
+  const mn=[1e9,1e9,1e9],mx=[-1e9,-1e9,-1e9];
+  for(let i=0;i<V;i++)for(let k=0;k<3;k++){const x=U[i*3+k];if(x<mn[k])mn[k]=x;if(x>mx[k])mx[k]=x}
+  const c0=mn.map((x,k)=>(x+mx[k])/2),dim=mx.map((x,k)=>x-mn[k]);
+  const nrm=new Float32Array(T*3),area=new Float32Array(T);let vol=0,tot=0;
+  for(let t=0;t<T;t++){
+    const a=I[t*3]*3,b=I[t*3+1]*3,c=I[t*3+2]*3;
+    const e1x=U[b]-U[a],e1y=U[b+1]-U[a+1],e1z=U[b+2]-U[a+2],e2x=U[c]-U[a],e2y=U[c+1]-U[a+1],e2z=U[c+2]-U[a+2];
+    const nx=e1y*e2z-e1z*e2y,ny=e1z*e2x-e1x*e2z,nz=e1x*e2y-e1y*e2x,l=Math.hypot(nx,ny,nz);
+    area[t]=l/2;tot+=l/2;
+    if(l>1e-12){nrm[t*3]=nx/l;nrm[t*3+1]=ny/l;nrm[t*3+2]=nz/l}
+    vol+=(U[a]*(U[b+1]*U[c+2]-U[b+2]*U[c+1])-U[a+1]*(U[b]*U[c+2]-U[b+2]*U[c])+U[a+2]*(U[b]*U[c+1]-U[b+1]*U[c]))/6;
+  }
+  if(vol<0)for(let i=0;i<nrm.length;i++)nrm[i]=-nrm[i]; // нормали наружу
+  const em=new Map(),nb=new Array(T);for(let t=0;t<T;t++)nb[t]=[];
+  for(let t=0;t<T;t++)for(let e=0;e<3;e++){
+    const p=I[t*3+e],q=I[t*3+(e+1)%3],key=p<q?p*V+q:q*V+p,o=em.get(key);
+    if(o===undefined)em.set(key,t);else{nb[t].push(o);nb[o].push(t)}
+  }
+  // ---- цилиндры вдоль осей X, Y, Z ----
+  const found=[];
+  for(let a=0;a<3;a++){
+    const u=(a+1)%3,v=(a+2)%3,q=new Uint8Array(T),phi=new Float32Array(T);
+    for(let t=0;t<T;t++)if(area[t]>0&&Math.abs(nrm[t*3+a])<.05){q[t]=1;phi[t]=Math.atan2(nrm[t*3+v],nrm[t*3+u])}
+    const dph=(s,t)=>{const d=Math.abs(phi[s]-phi[t]);return d>Math.PI?2*Math.PI-d:d};
+    const cvx=new Uint8Array(T);
+    for(let t=0;t<T;t++)if(q[t])for(const s of nb[t])if(q[s]){const d=dph(s,t);if(d>.005&&d<1.22){cvx[t]=1;break}}
+    const comp=new Uint8Array(T);
+    for(let t0=0;t0<T;t0++){
+      if(!cvx[t0]||comp[t0])continue;
+      const st=[t0],tris=[];comp[t0]=1;
+      while(st.length){const x=st.pop();tris.push(x);for(const s of nb[x])if(cvx[s]&&!comp[s]&&dph(s,x)<1.22){comp[s]=1;st.push(s)}}
+      const ids=new Set();tris.forEach(t=>{for(let e=0;e<3;e++)ids.add(I[t*3+e])});
+      let pts=[...ids],fit=null;
+      for(let it=0;it<3&&pts.length>=6;it++){
+        fit=geoKasa(U,pts,u,v);if(!fit){pts=[];break}
+        const lim=Math.max(.05*fit.r,.15);
+        const keep=pts.filter(i=>Math.abs(Math.hypot(U[i*3+u]-fit.cu,U[i*3+v]-fit.cv)-fit.r)<=lim);
+        if(keep.length===pts.length)break;pts=keep;
+      }
+      if(pts.length<6||!fit)continue;
+      fit=geoKasa(U,pts,u,v);if(!fit)continue;
+      let rms=0;pts.forEach(i=>{const d=Math.hypot(U[i*3+u]-fit.cu,U[i*3+v]-fit.cv)-fit.r;rms+=d*d});rms=Math.sqrt(rms/pts.length);
+      if(fit.r<.4||fit.r>Math.max(...dim)||rms>.03*fit.r+.03)continue;
+      const set=new Set(pts);let os=0;
+      tris.forEach(t=>{
+        let ok=true;for(let e=0;e<3;e++)if(!set.has(I[t*3+e]))ok=false;if(!ok)return;
+        let mu=0,mv=0;for(let e=0;e<3;e++){mu+=U[I[t*3+e]*3+u];mv+=U[I[t*3+e]*3+v]}mu=mu/3-fit.cu;mv=mv/3-fit.cv;
+        const l=Math.hypot(mu,mv)||1;os+=area[t]*(nrm[t*3+u]*mu+nrm[t*3+v]*mv)/l;
+      });
+      found.push({ax:a,u,v,cu:fit.cu,cv:fit.cv,r:fit.r,pts:set,os});
+    }
+  }
+  // ---- слияние кусков одного цилиндра (разрезанных на половины / по длине) ----
+  const merged=[];
+  found.forEach(f=>{
+    const m=merged.find(g=>g.ax===f.ax&&Math.abs(g.cu-f.cu)<.3&&Math.abs(g.cv-f.cv)<.3&&Math.abs(g.r-f.r)<.02*g.r+.05);
+    if(m){f.pts.forEach(i=>m.pts.add(i));m.os+=f.os}else merged.push(f);
+  });
+  const cyl=[];
+  merged.forEach(f=>{
+    const pts=[...f.pts],cv=geoCover(U,pts,f.u,f.v,f.cu,f.cv);
+    let kind='arc';if(cv.cov>=5.76)kind=f.os>0?'boss':'hole';
+    let bu=0,bv=0;
+    if(kind==='arc'){
+      const bind=(ph)=>{const c=Math.cos(ph),s=Math.sin(ph);return Math.abs(s)<.035?[Math.sign(c),0]:(Math.abs(c)<.035?[0,Math.sign(s)]:[0,0])};
+      const e1=bind(cv.A),e2=bind(cv.B);
+      const comb=(x,y)=>x&&y?(x===y?x:0):(x||y);
+      bu=comb(e1[0],e2[0]);bv=comb(e1[1],e2[1]);
+    }
+    if(kind==='arc'&&f.r>.15*Math.max(...dim))return; // большие дуги — часть формы детали, масштабируются вместе с ней
+    cyl.push({ax:f.ax,u:f.u,v:f.v,cu:f.cu,cv:f.cv,r:f.r,kind,bu,bv,pts});
+  });
+  const rank=k=>({hole:0,boss:1,arc:2})[k];
+  cyl.sort((x,y)=>rank(x.kind)-rank(y.kind)||(y.r-x.r)||(x.cu-y.cu)||(x.cv-y.cv));
+  let nh=0,nbss=0;
+  cyl.forEach(f=>{
+    if(f.kind==='hole'){if(nh<12)f.hi=nh++;else f.kind='arc'}
+    if(f.kind==='boss'){if(nbss<4)f.di=nbss++;else f.kind='arc'}
+  });
+  cyl.forEach(f=>{if(f.kind==='arc'){f.bu=f.bu||0;f.bv=f.bv||0}else{f.bu=0;f.bv=0}});
+  cyl.sort((x,y)=>rank(x.kind)-rank(y.kind)||(y.r-x.r)||(x.cu-y.cu)||(x.cv-y.cv));
+  const owner=new Int32Array(V).fill(-1);
+  cyl.forEach((f,i)=>{f.verts=[...f.pts].filter(vi=>owner[vi]<0);f.verts.forEach(vi=>{owner[vi]=i})});
+  const holes=cyl.filter(f=>f.kind==='hole'),bosses=cyl.filter(f=>f.kind==='boss');
+  // деталь, построенная вращением: внешний цилиндр на всю ширину
+  let round=-1;
+  bosses.forEach((f,i)=>{if(round<0&&2*f.r>=.9*dim[f.u]&&2*f.r>=.9*dim[f.v])round=i});
+  // ---- уклоны: наклонные плоские грани ----
+  const grp=new Map();
+  for(let t=0;t<T;t++){
+    if(area[t]<=0)continue;
+    const nx=nrm[t*3],ny=nrm[t*3+1],nz=nrm[t*3+2],n=[nx,ny,nz];
+    let c=-1;for(let k=0;k<3;k++)if(Math.abs(n[k])<.02)c=c<0?k:-2;
+    if(c<0)continue;
+    const u=(c+1)%3,v=(c+2)%3,au=Math.abs(n[u]),av=Math.abs(n[v]),mxn=Math.max(au,av),mnn=Math.min(au,av);
+    if(mnn/mxn<.0524||mnn/mxn>1.7)continue;
+    const a0=I[t*3]*3,d=n[0]*U[a0]+n[1]*U[a0+1]+n[2]*U[a0+2];
+    const key=c+'|'+Math.round(n[u]*100)+'|'+Math.round(n[v]*100)+'|'+Math.round(d/.4);
+    let g=grp.get(key);if(!g){g={c,u,v,nu:0,nv:0,d,a:0,tris:[]};grp.set(key,g)}
+    g.a+=area[t];g.nu+=n[u]*area[t];g.nv+=n[v]*area[t];g.tris.push(t);
+  }
+  const faces=[];
+  [...grp.values()].sort((x,y)=>y.a-x.a).forEach(g=>{
+    if(g.a<.02*tot)return;
+    const nu=g.nu/g.a,nv=g.nv/g.a,l=Math.hypot(nu,nv);
+    const m=faces.find(f=>f.c===g.c&&Math.abs(f.nu-nu/l)<.012&&Math.abs(f.nv-nv/l)<.012&&Math.abs(f.d-g.d)<.6);
+    if(m){m.tris=m.tris.concat(g.tris);m.a+=g.a}else faces.push({c:g.c,u:g.u,v:g.v,nu:nu/l,nv:nv/l,d:g.d,a:g.a,tris:g.tris});
+  });
+  const slopes=[];
+  faces.forEach(f=>{
+    const w=Math.abs(f.nu)>=Math.abs(f.nv)?f.u:f.v,o=w===f.u?f.v:f.u,nw=w===f.u?f.nu:f.nv,no=w===f.u?f.nv:f.nu;
+    const m0=-no/nw,a0=Math.atan(Math.abs(m0));
+    const ids=new Set();f.tris.forEach(t=>{for(let e=0;e<3;e++)ids.add(I[t*3+e])});
+    const verts=[...ids];
+    // шарнир уклона — конец грани, примыкающий к основанию (нижний при наклоне наружу в +w, верхний при -w)
+    let wb=nw>0?1e9:-1e9,up=0;
+    verts.forEach(i=>{const x=U[i*3+w];if(nw>0?x<wb:x>wb)wb=x});
+    let cn=0;verts.forEach(i=>{if(Math.abs(U[i*3+w]-wb)<1e-4){up+=U[i*3+o];cn++}});up/=cn||1;
+    let s=slopes.find(x=>x.w===w&&x.u===o&&x.c===f.c&&Math.abs(x.a0-a0)<.012);
+    if(!s){if(slopes.length>=4)return;s={c:f.c,w,u:o,a0,faces:[]};slopes.push(s)}
+    let umin=1e9,umax=-1e9;verts.forEach(i=>{const x=U[i*3+o];if(x<umin)umin=x;if(x>umax)umax=x});
+    s.nw=nw>0?1:-1;
+    if(s.faces.length<6)s.faces.push({verts:Int32Array.from(verts),m0,up,wp:wb,umin,umax});
+  });
+  return {c0,dim,mn,mx,V,T,cyl,holes,bosses,round,slopes,owner};
+}
+// ---- применение параметров ----
+function geoApply(U,G,st,W){
+  const V=U.length/3,c0=G.c0,S=[st.U*st.k[0],st.U*st.k[1],st.U*st.k[2]];
+  for(let i=0;i<V;i++)for(let k=0;k<3;k++)W[i*3+k]=c0[k]+S[k]*(U[i*3+k]-c0[k]);
+  G.cyl.forEach(f=>{
+    const u=f.u,v=f.v,rf=st.U*(f.kind==='hole'?st.hf[f.hi]:(f.kind==='boss'?st.df[f.di]:1));
+    let cu=c0[u]+S[u]*(f.cu-c0[u]),cv=c0[v]+S[v]*(f.cv-c0[v]);
+    if(f.kind==='arc'){
+      if(f.bu){const pu=c0[u]+S[u]*(f.cu+f.bu*f.r-c0[u]);cu=pu-f.bu*f.r*rf}
+      if(f.bv){const pv=c0[v]+S[v]*(f.cv+f.bv*f.r-c0[v]);cv=pv-f.bv*f.r*rf}
+    }
+    for(let q=0;q<f.verts.length;q++){
+      const i=f.verts[q];
+      W[i*3+u]=cu+(U[i*3+u]-f.cu)*rf;W[i*3+v]=cv+(U[i*3+v]-f.cv)*rf;
+    }
+  });
+  G.slopes.forEach((s,i)=>{
+    const w=s.w,u=s.u,Sw=S[w],Su=S[u],sf=st.sf[i];
+    if(Math.abs(sf-1)<1e-9)return;
+    const wbase=c0[w]+Sw*((s.nw>0?G.mn[w]:G.mx[w])-c0[w]),dcap=.5*G.dim[w]*Sw;
+    s.faces.forEach(fc=>{
+      const ms=fc.m0*Sw/Su,m1=ms*sf,ups=c0[u]+Su*(fc.up-c0[u]),wps=c0[w]+Sw*(fc.wp-c0[w]);
+      const u0=c0[u]+Su*(fc.umin-c0[u]),u1=c0[u]+Su*(fc.umax-c0[u]);
+      // не заходим на соседние параллельные грани того же уклона
+      const um=(u0+u1)/2,hm=wps+ms*(um-ups);let gap=1e9;
+      s.faces.forEach(g=>{if(g===fc)return;
+        const gm=c0[w]+Sw*(g.wp-c0[w])+g.m0*Sw/Su*(um-(c0[u]+Su*(g.up-c0[u])));
+        const d=s.nw>0?hm-gm:gm-hm;if(d>1e-3&&d<gap)gap=d});
+      const dlim=Math.min(dcap,.45*gap);
+      // смещение материала в точке (uu, ww): 0 вне грани, полное на самой грани, плавно затухает вглубь
+      const disp=(uu,ww)=>{
+        const x=Math.min(u1,Math.max(u0,uu)),h0=wps+ms*(x-ups);
+        const H0=s.nw>0?h0-wbase:wbase-h0,D=Math.max(1e-3,Math.min(H0>1e-6?H0:dlim,dlim));
+        const depth=s.nw>0?h0-ww:ww-h0;
+        if(depth<-1e-3)return 0;
+        let wt=Math.max(0,1-Math.max(0,depth)/D);
+        const du=uu<u0?u0-uu:(uu>u1?uu-u1:0);wt*=Math.max(0,1-du/D);
+        const sh=Math.max(-.95*D,Math.min(.95*D,(m1-ms)*(x-ups)));
+        return wt*sh;
+      };
+      for(let vi=0;vi<V;vi++){
+        if(G.owner[vi]>=0)continue;
+        W[vi*3+w]+=disp(W[vi*3+u],W[vi*3+w]);
+      }
+      G.cyl.forEach(f=>{
+        if(!f.verts.length)return;
+        let mu=0,mw=0;for(let q=0;q<f.verts.length;q++){mu+=W[f.verts[q]*3+u];mw+=W[f.verts[q]*3+w]}
+        mu/=f.verts.length;mw/=f.verts.length;
+        const d=disp(mu,mw);
+        if(d)for(let q=0;q<f.verts.length;q++)W[f.verts[q]*3+w]+=d;
+      });
+    });
+  });
+}
+// ---- описание параметров (хранится в файле модели) ----
+function geoMeta(G,st){
+  const deg=a=>a*180/Math.PI;
+  return {v:1,c0:G.c0.slice(),dim:G.dim.slice(),
+    hid:[0,1,2].map(a=>{const r=G.round>=0?G.bosses[G.round]:null;return r&&(a===r.u||a===r.v)?1:0}),
+    hole:G.holes.map(f=>({r:f.r,ax:f.ax})),boss:G.bosses.map(f=>({r:f.r,ax:f.ax})),
+    slope:G.slopes.map(s=>({u:s.u,w:s.w,a0:deg(s.a0)})),
+    st:geoState(G.holes.length,G.bosses.length,G.slopes.length)};
+}
+function geoState(nh,nb,ns){return {U:1,k:[1,1,1],hf:new Array(nh).fill(1),df:new Array(nb).fill(1),sf:new Array(ns).fill(1)}}
+const GAX='XYZ';
+const GL={
+  ru:{ax:['Длина','Ширина','Высота'],sc:'Масштаб, %',dia:'Диаметр',hole:'Отверстие',slope:'Уклон',plane:'плоскость'},
+  en:{ax:['Length','Width','Height'],sc:'Scale, %',dia:'Diameter',hole:'Hole',slope:'Slope',plane:'plane'},
+  he:{ax:['אורך','רוחב','גובה'],sc:'קנה מידה, %',dia:'קוטר',hole:'חור',slope:'שיפוע',plane:'מישור'}
+};
+function geoParams(g){
+  const L=[],lb=f=>({ru:f('ru'),en:f('en'),he:f('he')});
+  L.push({key:'sc',kind:'sc',unit:'pct',min:30,max:300,def:g.st.U*100,lab:lb(l=>GL[l].sc)});
+  for(let a=0;a<3;a++)if(!g.hid[a])L.push({key:'k'+GAX[a].toLowerCase(),kind:'ax',a,unit:'mm',min:g.dim[a]*.3,max:g.dim[a]*3,def:g.dim[a]*g.st.U*g.st.k[a],lab:lb(l=>GL[l].ax[a])});
+  [[0,1],[0,2],[1,2]].forEach(([a,b])=>{
+    if(g.hid[a]||g.hid[b])return;
+    L.push({key:'p'+GAX[a].toLowerCase()+GAX[b].toLowerCase(),kind:'pr',a,b,unit:'pct',min:30,max:300,def:(g.st.k[a]+g.st.k[b])/2*100,lab:lb(l=>GL[l].ax[a]+' + '+GL[l].ax[b]+', %')});
+  });
+  g.boss.forEach((f,i)=>L.push({key:'d'+i,kind:'dm',i,unit:'mm',min:f.r*.6,max:f.r*6,def:2*f.r*g.st.U*g.st.df[i],lab:lb(l=>GL[l].dia+(g.boss.length>1?' '+(i+1):''))}));
+  g.hole.forEach((f,i)=>L.push({key:'h'+i,kind:'ho',i,unit:'mm',min:Math.max(.4,f.r*.6),max:f.r*6,def:2*f.r*g.st.U*g.st.hf[i],lab:lb(l=>GL[l].hole+' '+(i+1))}));
+  const cnt={};
+  g.slope.forEach((s,i)=>{
+    const pl=[s.u,s.w].sort().map(x=>GAX[x]).join('–');cnt[pl]=(cnt[pl]||0)+1;
+  });
+  const seen={};
+  g.slope.forEach((s,i)=>{
+    const pl=[s.u,s.w].sort().map(x=>GAX[x]).join('–');seen[pl]=(seen[pl]||0)+1;
+    L.push({key:'sl'+i,kind:'sp',i,unit:'deg',min:Math.max(.5,s.a0-10),max:Math.min(60,s.a0+10),def:geoAngle(g,g.st,i),lab:lb(l=>GL[l].slope+' ('+GL[l].plane+' '+pl+')'+(cnt[pl]>1?' '+seen[pl]:''))});
+  });
+  return L;
+}
+const gclamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+// текущий угол уклона с учётом масштабирования осей и множителя уклона
+function geoAngle(g,st,i){const s=g.slope[i];return Math.atan(Math.tan(s.a0*Math.PI/180)*(st.k[s.w]/st.k[s.u])*st.sf[i])*180/Math.PI}
+function geoSet(g,st,key,val){
+  if(key==='sc')st.U=gclamp(val/100,.3,3);
+  else if(key[0]==='k'){const a=GAX.toLowerCase().indexOf(key[1]);st.k[a]=gclamp(val/(g.dim[a]*st.U),.25,4)}
+  else if(key[0]==='p'){const a=GAX.toLowerCase().indexOf(key[1]),b=GAX.toLowerCase().indexOf(key[2]);st.k[a]=st.k[b]=gclamp(val/100,.25,4)}
+  else if(key[0]==='d'){const i=+key.slice(1);st.df[i]=gclamp(val/(2*g.boss[i].r*st.U),.2,5)}
+  else if(key[0]==='h'){const i=+key.slice(1);st.hf[i]=gclamp(val/(2*g.hole[i].r*st.U),.2,5)}
+  else if(key.slice(0,2)==='sl'){const i=+key.slice(2),s=g.slope[i];st.sf[i]=gclamp(Math.tan(gclamp(val,.5,70)*Math.PI/180)/(Math.tan(s.a0*Math.PI/180)*(st.k[s.w]/st.k[s.u])),.2,5)}
+}
+function geoVals(g,st){const o={};geoParams({...g,st}).forEach(p=>{o[p.key]=p.def});return o}
+
+function geoOff(e){
+  if(e.ui&&Array.isArray(e.ui.off))return new Set(e.ui.off);
+  return new Set(geoParams(e.geo).filter(p=>p.kind==='pr').map(p=>p.key));
+}
+// запись модели (формат objmodel v6: масштаб, оси, диаметры, отверстия, уклоны)
+function buildEntryGeo(o){
+  const c=o.canon,big=c.U.length/3>65535;
+  const idx=big?Uint32Array.from(c.I):Uint16Array.from(c.I);
+  return {fmt:'objmodel',ver:6,thn:1,desc:o.desc||{},id:o.id,name:o.name,tag:o.tag,color:o.color,z:!!o.z,s:!!o.s,
+    src:o.src,tris:c.I.length/3,added:new Date().toISOString().slice(0,10),thumb:o.thumb||'',
+    pos:b64enc(c.U),idx:b64enc(idx),ib:big?4:2,geo:o.geo,ui:o.ui||{off:[],lab:{},rg:{}}};
+}
+
+// ===== Подключение OBJ-моделей к каталогу сайта =====
+const REG = (function () {
+  try {
+    const el = document.getElementById('obj-models-data');
+    const t = el ? el.textContent.trim() : '';
+    const d = t ? JSON.parse(t) : {};
+    return { models: Array.isArray(d.models) ? d.models : [], hidden: Array.isArray(d.hidden) ? d.hidden : [] };
+  } catch (err) { console.error('OBJ models registry error', err); return { models: [], hidden: [] }; }
+})();
+const byId = new Map(), state = new Map();
+function geoVis(e) { const off = geoOff(e); return geoParams(e.geo).filter(function (p) { return !off.has(p.key); }); }
+function schemaOfGeo(e) {
+  const rg = (e.ui && e.ui.rg) || {};
+  return geoVis(e).map(function (p) {
+    let mn = p.min, mx = p.max;
+    const o = rg[p.key];
+    if (o && o.length === 2 && isFinite(o[0]) && isFinite(o[1])) { mn = +o[0]; mx = +o[1]; }
+    mn = Math.min(mn, p.def); mx = Math.max(mx, p.def);
+    return { key: p.key, min: Math.floor(mn * 10) / 10, max: Math.ceil(mx * 10) / 10, step: p.unit === 'pct' ? 1 : 0.1, def: p.def, unit: p.unit };
+  });
+}
+function paramsOfGeo(e, lang) {
+  const o = {};
+  geoVis(e).forEach(function (p) { const ov = e.ui && e.ui.lab && e.ui.lab[p.key]; o[p.key] = (ov && ov[lang]) || p.lab[lang]; });
+  return o;
+}
+function buildNB(pos, n) {
+  const fn = faceNormals(pos, n), c = Math.cos(40 * Math.PI / 180), map = new Map();
+  const key = function (i) { return Math.round(pos[i * 3] * 1e4) + ',' + Math.round(pos[i * 3 + 1] * 1e4) + ',' + Math.round(pos[i * 3 + 2] * 1e4); };
+  for (let i = 0; i < n * 3; i++) { const k = key(i); (map.get(k) || map.set(k, []).get(k)).push((i / 3) | 0); }
+  const offs = new Int32Array(n * 3 + 1), list = [];
+  for (let i = 0; i < n * 3; i++) {
+    const f = (i / 3) | 0;
+    for (const j of map.get(key(i))) if (fn[j * 3] * fn[f * 3] + fn[j * 3 + 1] * fn[f * 3 + 1] + fn[j * 3 + 2] * fn[f * 3 + 2] > c) list.push(j);
+    offs[i + 1] = list.length;
+  }
+  return { off: offs, list: Int32Array.from(list) };
+}
+function visOf(e) {
+  const off = offSet(e), pl = paramList(e.axes);
+  const nw = pl.filter(function (p) { return isWall(p) && !off.has(p.key); }).length;
+  return pl.filter(function (p) { return !off.has(p.key) && (p.kind !== 'm' || nw > 1); });
+}
+function limitsOf(e, p) {
+  const ax = p.ax, rg = (e.ui && e.ui.rg && e.ui.rg[p.key]) || null;
+  let mn, mx, def;
+  if (p.kind === 'm') { mn = 30; mx = 300; def = 100; } else if (p.kind === 't') { mn = ax.trng[0]; mx = ax.trng[1]; def = ax.tdef; } else { mn = ax.rng[p.i][0]; mx = ax.rng[p.i][1]; def = ax.def[p.i]; }
+  if (rg && rg.length === 2 && isFinite(rg[0]) && isFinite(rg[1])) { mn = +rg[0]; mx = +rg[1]; }
+  return { mn: Math.min(mn, def), mx: Math.max(mx, def), def: def };
+}
+function schemaOf(e) {
+  return visOf(e).map(function (p) {
+    const l = limitsOf(e, p);
+    if (p.kind === 'm') return { key: p.key, min: l.mn, max: l.mx, step: 1, def: 100, unit: 'pct' };
+    return { key: p.key, min: Math.floor(l.mn * 10) / 10, max: Math.ceil(l.mx * 10) / 10, step: 0.1, def: l.def, unit: 'mm' };
+  });
+}
+function paramsOf(e, lang) {
+  const o = {};
+  visOf(e).forEach(function (p) { o[p.key] = labelOf(e, p, lang); });
+  return o;
+}
+const PLACEHOLDER = '<svg viewBox="0 0 120 120" fill="none"><polygon points="22,70 60,90 98,70 60,50" fill="#cbd5e1" stroke="#0f172a" stroke-width="2.4"/><polygon points="22,70 60,90 60,104 22,84" fill="#94a3b8" stroke="#0f172a" stroke-width="2.4"/><polygon points="60,90 98,70 98,84 60,104" fill="#64748b" stroke="#0f172a" stroke-width="2.4"/></svg>';
+REG.hidden.forEach(function (hid) {
+  const i = MODEL_DEFS.findIndex(function (m) { return m.id === hid; });
+  if (i >= 0) MODEL_DEFS.splice(i, 1);
+});
+REG.models.forEach(function (e) {
+  if (!e || !e.id || !e.pos || !e.idx || !(Array.isArray(e.axes) || e.geo)) return;
+  if (byId.has(e.id) || MODEL_DEFS.some(function (m) { return m.id === e.id; })) return;
+  byId.set(e.id, e);
+  MODEL_DEFS.push({
+    id: e.id, color: e.color || '#4a4d52', obj: true, schema: e.geo ? schemaOfGeo(e) : schemaOf(e),
+    svg: !e.thumb ? PLACEHOLDER : (e.thn ? tintSvg(e.thumb, e.color || '#4a4d52', e.id) : '<svg viewBox="0 0 120 120" fill="none"><image href="' + e.thumb + '" x="0" y="0" width="120" height="120"/></svg>'),
+    svgFn: (e.thumb && e.thn) ? function (c) { return tintSvg(e.thumb, c, e.id + '-c'); } : null
+  });
+  Object.keys(I18N).forEach(function (lang) {
+    if (!I18N[lang].models) I18N[lang].models = {};
+    I18N[lang].models[e.id] = { name: pick(e.name, lang) || e.src || e.id, tag: pick(e.tag, lang), desc: pick(e.desc, lang), params: e.geo ? paramsOfGeo(e, lang) : paramsOf(e, lang) };
+  });
+});
+// ленивая подготовка модели при первом открытии
+function ensure(id) {
+  let S = state.get(id);
+  if (S) return S;
+  const e = byId.get(id);
+  if (!e) return null;
+  const ub = b64dec(e.pos), ib = b64dec(e.idx);
+  const U = new Float32Array(ub.buffer, 0, ub.byteLength / 4);
+  const I = e.ib === 4 ? new Uint32Array(ib.buffer, 0, ib.byteLength / 4) : new Uint16Array(ib.buffer, 0, ib.byteLength / 2);
+  const pos = expand(U, I), n = I.length / 3;
+  if (e.geo) {
+    const G = geoDetect(U, I), st = JSON.parse(JSON.stringify(e.geo.st));
+    while (st.hf.length < G.holes.length) st.hf.push(1);
+    while (st.df.length < G.bosses.length) st.df.push(1);
+    while (st.sf.length < G.slopes.length) st.sf.push(1);
+    const snap = {}, keys = [];
+    schemaOfGeo(e).forEach(function (s) { snap[s.key] = s.def; keys.push(s.key); });
+    const S2 = { e: e, geo: true, U: U, I: I, pos: pos, n: n, G: G, g: e.geo, st: st, NB: e.s ? buildNB(pos, n) : null,
+                 out: new Float32Array(n * 9), W: new Float32Array(U.length), snap: snap, keys: keys, vis: new Set(keys), zu: !!e.z };
+    state.set(id, S2);
+    return S2;
+  }
+  const AX = detect(pos, n, { split: !!e.split }), off = offSet(e), pl = paramList(e.axes);
+  AX.forEach(function (A, i) {
+    const m = e.axes[i];
+    if (!m || m.n !== A.vals.length) { console.warn('OBJ model axis mismatch', id, i); return; }
+    A.vals = m.def.slice(); A.rng = m.rng.map(function (r) { return r.slice(); }); A.trng = m.trng.slice();
+    pl.forEach(function (p) {
+      if (p.ai !== i || p.kind === 'm') return;
+      const l = limitsOf(e, p);
+      if (p.kind === 't') A.trng = [l.mn, l.mx]; else A.rng[p.i] = [l.mn, l.mx];
+    });
+    if (!A.sym) {
+      A.free = A.vals.map(function (_, j) { return !off.has('a' + i + 's' + j); });
+      A.seg = A.vals.length > 1 && A.free.some(Boolean);
+    }
+  });
+  const NB = e.s ? buildNB(pos, n) : null;
+  const snap = {}, vis = new Set();
+  schemaOf(e).forEach(function (s) { snap[s.key] = s.def; vis.add(s.key); });
+  const walls = [];
+  paramList(e.axes).forEach(function (p) {
+    if (!isWall(p) || off.has(p.key)) return;
+    const l = limitsOf(e, p), ax = e.axes[p.ai];
+    walls.push({ key: p.key, orig: (ax.orig && ax.orig[p.i]) || ax.def[p.i], min: l.mn, max: l.mx });
+  });
+  const lk = (e.ui && e.ui.link) || { show: true, on: false };
+  S = { e: e, pos: pos, n: n, AX: AX, NB: NB, out: new Float32Array(n * 9), snap: snap, vis: vis, zu: !!e.z,
+        walls: walls, linkShow: lk.show !== false && walls.length > 1, link: !!lk.on };
+  state.set(id, S);
+  return S;
+}
+function syncKeys(id, p, keys) {
+  if (!keys.length || typeof activeModelId === 'undefined' || activeModelId !== id) return;
+  const def = MODEL_DEFS.find(function (x) { return x.id === id; });
+  if (!def) return;
+  keys.forEach(function (k) {
+    const item = def.schema.find(function (s) { return s.key === k; });
+    if (!item) return;
+    const disp = mmToDisplay(p[k], item);
+    const rg = paramsContainer.querySelector('input[type="range"][data-key="' + k + '"]');
+    const nm = document.getElementById('num-' + k);
+    if (rg) rg.value = String(disp);
+    if (nm && document.activeElement !== nm) nm.value = formatManualInputNumber(disp, item);
+  });
+}
+function buildOld(S, id, p) {
+  const AX = S.AX, changed = [], vis = S.vis, forced = [];
+  const hasM = vis.has('wall_all') && S.walls.length > 1;
+  if (S.walls.length > 1) {
+    const ch = S.walls.filter(function (w) { return typeof p[w.key] === 'number' && p[w.key] !== S.snap[w.key]; });
+    const mCh = hasM && typeof p.wall_all === 'number' && p.wall_all !== S.snap.wall_all;
+    if (mCh && ch.length === 0) {
+      const r = wallScaleF(S.walls, p.wall_all / 100);
+      S.walls.forEach(function (w) { p[w.key] = r.vals[w.key]; forced.push(w.key); });
+      p.wall_all = r.f * 100;
+    } else if (S.link && ch.length === 1 && !mCh) {
+      const m = wallScale(S.walls, ch[0].key, p[ch[0].key]);
+      if (m) S.walls.forEach(function (w) { p[w.key] = m[w.key]; forced.push(w.key); });
+    }
+  }
+  AX.forEach(function (A) {
+    const ai = A.a, kt = 'a' + ai + 't';
+    let segCh = false;
+    A.vals.forEach(function (_, i) {
+      const k = 'a' + ai + 's' + i;
+      if (!vis.has(k)) return;
+      if (typeof p[k] === 'number' && p[k] !== S.snap[k]) { setSeg(A, i, p[k]); segCh = true; }
+    });
+    if (!segCh && vis.has(kt) && typeof p[kt] === 'number' && p[kt] !== S.snap[kt]) setTotal(A, p[kt]);
+    A.vals.forEach(function (_, i) {
+      const k = 'a' + ai + 's' + i;
+      if (!vis.has(k)) return;
+      if (p[k] !== A.vals[i]) { p[k] = A.vals[i]; changed.push(k); }
+      S.snap[k] = A.vals[i];
+    });
+    if (vis.has(kt)) {
+      const T = total(A);
+      if (p[kt] !== T) { p[kt] = T; changed.push(kt); }
+      S.snap[kt] = T;
+    }
+  });
+  if (hasM) {
+    const pct = wallPct(S.walls, function (k) { return p[k]; });
+    if (Math.abs(pct - p.wall_all) > 0.05) { p.wall_all = pct; forced.push('wall_all'); }
+    S.snap.wall_all = p.wall_all;
+  }
+  syncKeys(id, p, changed.concat(forced));
+  deform(S.pos, S.out, AX);
+}
+function buildGeo(S, id, p) {
+  const changed = [];
+  S.keys.forEach(function (k) { if (typeof p[k] === 'number' && Math.abs(p[k] - S.snap[k]) > 1e-9) geoSet(S.g, S.st, k, p[k]); });
+  const vals = geoVals(S.g, S.st);
+  S.keys.forEach(function (k) {
+    if (!(Math.abs((p[k] === undefined ? NaN : p[k]) - vals[k]) <= 1e-9)) { p[k] = vals[k]; changed.push(k); }
+    S.snap[k] = p[k];
+  });
+  syncKeys(id, p, changed);
+  geoApply(S.U, S.G, S.st, S.W);
+  const out = S.out, W = S.W, I = S.I;
+  for (let t = 0; t < S.n * 3; t++) { const q = I[t] * 3; out[t * 3] = W[q]; out[t * 3 + 1] = W[q + 1]; out[t * 3 + 2] = W[q + 2]; }
+}
+function build(id, p) {
+  const S = ensure(id);
+  if (!S) return;
+  if (S.geo) buildGeo(S, id, p); else buildOld(S, id, p);
+  const n = S.n, out = S.out, zu = S.zu;
+  const fn = faceNormals(out, n), nr = new Float32Array(n * 9), w = new Float32Array(n * 9);
+  for (let i = 0; i < n * 3; i++) {
+    let x = 0, y = 0, z = 0;
+    if (S.NB) { for (let q = S.NB.off[i]; q < S.NB.off[i + 1]; q++) { const j = S.NB.list[q] * 3; x += fn[j]; y += fn[j + 1]; z += fn[j + 2]; } }
+    else { const j = ((i / 3) | 0) * 3; x = fn[j]; y = fn[j + 1]; z = fn[j + 2]; }
+    const l = Math.hypot(x, y, z) || 1;
+    if (zu) { nr[i * 3] = x / l; nr[i * 3 + 1] = z / l; nr[i * 3 + 2] = -y / l; } else { nr[i * 3] = x / l; nr[i * 3 + 1] = y / l; nr[i * 3 + 2] = z / l; }
+  }
+  const mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
+  for (let v = 0; v < n * 3; v++) {
+    const x = out[v * 3], y = out[v * 3 + 1], z = out[v * 3 + 2];
+    const q = zu ? [x, z, -y] : [x, y, z];
+    for (let k = 0; k < 3; k++) { w[v * 3 + k] = q[k]; if (q[k] < mn[k]) mn[k] = q[k]; if (q[k] > mx[k]) mx[k] = q[k]; }
+  }
+  const cx = (mn[0] + mx[0]) / 2, cz = (mn[2] + mx[2]) / 2;
+  for (let v = 0; v < n * 3; v++) { w[v * 3] -= cx; w[v * 3 + 1] -= mn[1]; w[v * 3 + 2] -= cz; }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(w, 3));
+  geo.setAttribute('normal', new THREE.BufferAttribute(nr, 3));
+  geo.computeBoundingSphere();
+  const mesh = new THREE.Mesh(geo, currentMaterial);
+  mesh.castShadow = false; mesh.receiveShadow = false;
+  modelGroup.add(mesh);
+  if (n <= 80000) {
+    const line = new THREE.LineSegments(new THREE.EdgesGeometry(geo, 30), edgeMat);
+    line.visible = showEdges;
+    edgesGroup.add(line);
+  }
+}
+// динамические ближняя/дальняя плоскости: стенки не пропадают при отдалении и приближении камеры
+function clip(cam, ctl) {
+  const d = cam.position.distanceTo(ctl.target);
+  const near = Math.max(d * 0.02, 0.05), far = d * 20 + 1000;
+  if (Math.abs(cam.near - near) > near * 0.02 || Math.abs(cam.far - far) > far * 0.02) { cam.near = near; cam.far = far; cam.updateProjectionMatrix(); }
+}
+// галочка «все стенки пропорционально» над первым ползунком стенки
+const LINKTXT = { he: 'כל הקירות בפרופורציה', en: 'All walls proportionally', ru: 'Все стенки пропорционально' };
+function decorate(id) {
+  const S = ensure(id);
+  if (!S || S.geo || !S.linkShow || !S.walls.length) return;
+  const rg = paramsContainer.querySelector('input[type="range"][data-key="' + S.walls[0].key + '"]');
+  const item = rg && rg.closest('.param-item');
+  if (!item) return;
+  const row = document.createElement('label');
+  row.className = 'param-item';
+  row.style.cssText = 'display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12.5px;font-weight:700';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox'; cb.checked = S.link;
+  cb.addEventListener('change', function () { S.link = cb.checked; });
+  const sp = document.createElement('span');
+  sp.textContent = LINKTXT[currentLang] || LINKTXT.en;
+  row.appendChild(cb); row.appendChild(sp);
+  item.parentNode.insertBefore(row, item);
+}
+return { ver: 6, has: function (id) { return byId.has(id); }, build: build, clip: clip, decorate: decorate };
+})();
+/*OBJRT:END*/
+</script>
+<script id="embed" type="application/json">{"fmt":"objmodel","ver":6,"thn":1,"desc":{"ru":"","en":"","he":""},"id":"obj-1jk5e8j","name":{"ru":"ПодставкаПультМазган","en":"ПодставкаПультМазган","he":"ПодставкаПультМазган"},"tag":{"ru":"Модель","en":"Model","he":"דגם"},"color":"#437adb","z":true,"s":true,"src":"ПодставкаПультМазган.html","tris":2234,"added":"2026-11-25","thumb":"data:image/webp;base64,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","pos":"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","idx":"AAABAAIAAAACAAMAAAADAAQAAAAEAAUAAAAFAAYAAAAGAAcAAAAHAAgACQAAAAgACgABAAAACwAJAAgADAABAAoADQALAAgADgABAAwADwABAA4AEAANAAgAEQAQAAgAEgAQABEAEwASABEAFAATABEAFQAUABEAFQAWABcAFQARABYAGAAVABcAGAAZABoAGAAXABkAGwAYABoAHAAYABsAHQAcABsAHgAcAB0AHwAgABwAHwAcAB4AIQAiACMAJAAjACUAJAAlACAAJAAgAB8AJgAhACMAJwAmACMAKAAjACQAKQAnACMAKgAjACgAKwApACMALAAjACoALAArACMALQAuAC8ALQAvADAAMQAtADAAMgAzADQAMgA0ADUAMgA1AC0AMgAtADEANgAzADIANwA2ADIAOAA3ADIAOQA4ADIAOQAyADoAOwA5ADoAPAA5ADsAPQA5ADwAPgA5AD0APwBAAEEAPwBBAEIAQwA/AEIARAA/AEMARQA/AEQARgA/AEUARwA/AEYASAA/AEcASQBKAD8ASQBLAEoASQA/AEgATAA+AE0ATABOAE8ATABQAE4ATABNAFAATAA5AD4AUQBLAEkAUQBSAEsAUwBPAFQAUwBMAE8AVQBSAFEAVgBSAFUAVwBTAFQAWABUAFIAWABSAFYAWQBXAFQAWQBUAFgALQABAC4ALgABAA8ASQBaAFEAWgBbAFEAHwBcACQAWgBcAFsAXABdAFsAHwBdAFwAKABcAF4AKAAkAFwAKgBeAF8AKgAoAF4ALAAqAF8AKwBfAGAAKwBgAGEAKwAsAF8AKQBhAGIAKQArAGEAJwBiAGMAJwApAGIAJgBjAGQAJgAnAGMAIQBkAGUAIQAmAGQAXQAfAGYAZgAeAGcAZwAeAGgAHwAeAGYAaAAdAGkAaQAdAGoAHgAdAGgAagAbAGsAHQAbAGoAawAaAGwAGwAaAGsAbAAZAG0AGgAZAGwAbQAXAG4AGQAXAG0AbgAWAG8AFwAWAG4AFgARAG8AIQBwACIAIQBlAHAACABxABEAcQBvABEAcQByAG8AcAAjACIAcwAjAHAAdABAAD8AdQBwAHQAdQB0AD8AdQBzAHAAAQB2AHcAAgABAHcAAwB3AHgAAwACAHcABAB4AHkABAADAHgABQB5AHoABQAEAHkABgB6AHsABgB7AHwABgAFAHoABwB8AHEABwAGAHwACAAHAHEAJQBzAH0AJQAjAHMAIAB9AH4AIAAlAH0AHAB+AH8AHAAgAH4AGAB/AIAAGAAcAH8AFQCAAIEAFQAYAIAAFACBAIIAFAAVAIEAEwCCAIMAEwAUAIIAEgATAIMALQCEAAEAhQCEAC0ALQCGAIUAhgCHAIUAiAB2AIQAhAB2AAEAiQAQABIAgwCJABIAOQCKAIsAOAA5AIsANwCLAIwANwA4AIsANgCMAI0ANgA3AIwAMwCNAI4AMwA2AI0ANACOAI8ANACPAJAANAAzAI4ANQCQAIYANQA0AJAALQA1AIYAkQAOAAwAkgCRAAwAkwAMAAoAkwCSAAwAlACTAAoAlQAAAAkAlQAKAAAAlQCUAAoAlgCXAJgAlgCYAJkAmgCWAJkAmwCaAJkAmwCcAJoAnQCbAJkAngCdAJkAnwAQAIkAnwCeAJkAoACWAJoAoACaAJwAoQCcAJsAoQCgAJwAogChAJsAogCbAJ0AowCdAJ4AowCeAJ8AowCiAJ0ApAAJAAsApQALAA0ApQCkAAsApgCkAKUApwCmAKUAqAANABAAqAClAA0AqQClAKgAqQCnAKUAqgCnAKkAqgCYAJcAqgCmAKcAqwCpAKgArACoABAArAAQAJ8ArACrAKgArQCpAKsArQCqAKkArQCrAKwArQCsAJ8ArQCZAJgArQCfAJkArQCYAKoArgCWAKAArwCwAA8ArwCWAK4ArwAPAJcArwCXAJYAsQCwAK8AsgAPAA4AsgCRAJIAsgCSAJMAsgAOAJEAsgCTAJQAswCyAJQAswCUAJUAswAPALIAtAAPALMAtQCVAAkAtQAJAKQAtQCzAJUAtQC0ALMAtgCqAJcAtgCmAKoAtgC1AKQAtgAPALQAtgC0ALUAtgCXAA8AtgCkAKYAtwCgAKEAtwCuAKAAuAC3AKEAuQC4AKEAuQChAKIAuQCiAKMAugCvAK4AugCuALcAugCxAK8AugC3ALgAuwC5AKMAuwC4ALkAuwC6ALgAvAC9AL4AvwDAAMEAvwDCAL0AwwDEAMAAwwC9ALwAwwC/AL0AwwDAAL8AxQDEAMMAxQDDALwAxgCxALoAxgC6ALsAxgC7AL4AxgDCALEAxgC+AL0AxgC9AMIAxwDIALAAxwDBAMgAxwCwALEAxwC/AMEAxwCxAMIAxwDCAL8AyQC+ALsAyQCfAIkAyQCjAJ8AyQC7AKMAygDFALwAywDJAIkAywC8AL4AywC+AMkAywDKALwAzADNAMQAzADOAM0AzACJAM4AzADLAIkAzADEAMUAzADFAMoAzADKAMsAzwCKANAA0ACKAEwATACKADkA0QAuAA8AsADRAA8A0ABMAFMA0gBTAFcA0gBXAFkA0gDQAFMA0wBZAFgA0wDSAFkA1ADTAFgA1QBYAFYA1QDUAFgA1gBWAFUA1gDVAFYA1wDWAFUA2ABVAFEA2ADXAFUAWwDYAFEA2QAyADEA2gAxADAA2gDZADEA2wDaADAA3ADbADAA3QAwAC8A3QDcADAA3gDfAD4A4ADhAOIA4wDhAOAA5ADfAN4A5ADeAOUA5ADlAOYA5wDkAOYA5wDmAOgA5wDoAOIA6QDnAOIA6QDiAOEA6gDpAOEA6wDqAOEA7ADhAOMA7ADjAO0A7ADtAO4A7ADrAOEA7wDeAD4A7wDwAN4A7wA+APEA8gDvAPEA8wDxAPQA8wDyAPEA9QAvAC4A9QDcAN0A9QDdAC8A9gDvAPIA9gDwAO8A9wD1AC4A+AD3AC4A+QDsAO4A+QAuANEA+QD4AC4A+gDsAPkA+gD5ANEA+wD6ANEA/AA6ADIA/ADZANoA/ADaANsA/AAyANkA/ADcAPUA/ADbANwA/QD8APUA/gD9APUA/gD0AP0A/wDzAPQA/wD0AP4AAAH/AP4AAQH1APcAAQH+APUAAQEAAf4AAgHzAP8AAgH/AAABAgEBAfcAAgEAAQEBAwHyAPMAAwH2APIABAH3APgABAECAfcABQEDAfMABQHzAAIBBQECAQQBBgEDAQUBBwH2AAMBBwEDAQYBCAH4AAkBCAEEAfgACAEFAQQBCAEGAQUBCAEJAQcBCAEHAQYBCgH2AAcBCgELAfAACgHwAPYACgEJAQwBCgEMAQsBCgEHAQkBDQEMAQkBDQEJAfgADQH5AO4ADQH4APkADgHpAOoADgHqAOsADwHrAOwADwEOAesAEAHkAOcAEAHnAOkAEAHpAA4BEQEQAQ4BEQEOAQ8BEgERAQ8BEgEPAewAEgHsAPoAEwEQAREBEwERARIBEwEUARABFQESAfoAFQETARIBFgEXARgBGQEaARsBGQEXARYBGQEWARoBHAEdARcBHAEeAR0BHAEZARsBHAEXARkBHAEbAR8BHAEfASABIQE7ADoAIQE8ADsAIQE9ADwAIQE+AD0AIQH0APEAIQE6APwAIQH9APQAIQH8AP0AIQHxAD4AIgHwAAsBIgELAQwBIgEMAQ0BIwEiAQ0BIwHeAPAAIwHlAN4AIwHmAOUAIwHwACIBJAENAe4AJAEjAQ0BJAHoAOYAJAHiAOgAJAHgAOIAJAHjAOAAJAHtAOMAJAHuAO0AJAHmACMBJQEUASYBJQHfAOQAJQHkABABJQEQARQBJwEUARMBJwEVAfoAJwETARUBJwEmARQBJwH6APsAKAElASYBKAHfACUBKQEmAScBKQEnAfsAKgEmARoBKgEaARYBKgEoASYBKwEbARoBKwEaASYBKwEfARsBKwEgAR8BKwH7ACABKwEmASkBKwEpAfsALAEtAd8ALAEuAS0BLAEYAS4BLAEoASoBLAEqARYBLAEWARgBLAHfACgBLwEeARwBLwEwAR4BLwExATABLwHRADEBLwEgAfsALwEcASABLwH7ANEA3wAyAU0A3wBNAD4AWgBJAEgAMwFIAEcAMwFaAEgANAFHAEYANAFGAEUANAEzAUcANQE0AUUANgFFAEQANgE1AUUANwFEAEMANwE2AUQAOAFDAEIAOAE3AUMAOQFCAEEAOQE4AUIAOgE5AUEAdQBKADsBPwBKAHUAOwFLADwBSgBLADsBPAFSAD0BSwBSADwBPQFUAD4BUgBUAD0BPgFPAD8BVABPAD4BPwFOAEABTwBOAD8BQAFQADIBTgBQAEABUABNADIBOgFBAHQAdABBAEAAXgBaADMBXgBcAFoAXwAzATQBXwBeADMBYAA0ATUBYAA1ATYBYABfADQBYQA2ATcBYQBgADYBYgBhADcBZwBdAGYAaABdAGcAaQBdAGgAagBdAGkAawBdAGoAawBsAF0AbABtAF0AbQBuAF0AbgBvAF0AbwByAF0AWwDXANgAWwDWANcAWwDVANYAWwDUANUAWwDTANQAWwDSANMAWwDQANIAXQDPAFsAcgDPAF0AWwDPANAAZQB0AHAAZAA6AWUAZQA6AXQAYwA5AWQAZAA5AToBYgA4AWMAYwA4ATkBYgA3ATgBewBxAHwAeAB6AHkAeAB7AHoAeABxAHsAdgB4AHcAdgBxAHgAQQFyAHEAQQFxAHYAQgFBAXYAiABCAXYAQwFCAYgARAFDAYgARQHPAHIARQFyAEEBhwBGAUcBhwBHAUgBigDPAEUBhgBFAUYBhgBGAYcAhgCKAEUBkACLAIoAkACKAIYAjQCMAIsAjQCPAI4AjQCQAI8AjQCLAJAASQGwAMgASQHIAMEASQHBAMAASQHAAMQASQHEAM0ASQHNAM4ASgFJAc4ASgHOAIkAgACCAIEAfwCCAIAASwFMAU0BSwFNAU4BTwFLAU4BUAFNAUwBUQFPAU4BUgFNAVABfgCCAH8AUwFRAU4BVAFNAVIBVQFWAU0BVQFNAVQBVwFWAVUBWAGJAIMAWAFKAYkAWAFZAUoBfQCCAH4AWgFWAVcBWwFcAVMBXQFTAVwBXgFbAVMBXwFTAV0BXwFgAVMBYQFeAVMBYgFgAV8BcwCDAIIAcwCCAH0AcwBjAVgBcwBYAYMAZAFhAWMBZQFgAWIBZgFWAVoBZwFkAWMBaAFnAWMBaQFgAWUBaQFqAWsBaQFrAWwBaQFsAW0BaQFtAW4BaQFuAW8BaQFvAXABaQFwAXEBaQFxAXIBaQFyAXMBaQFzAWABdAFoAWMBdQF2AXcBdQF3AXgBeQF0AWMBegF1AXgBegFqAWkBegF4AWoBewF6AWkBfAF5AWMBfQF7AWkBfgF8AWMBfwF+AWMBgAF/AWMBgAFjAXMAgQGCAYMBgQGDAYQBhQGCAYEBhQGGAYIBhwGEAYgBhwGBAYQBiQGGAYUBiQFmAYYBigGIAYsBigGHAYgBjAGAAXMAjQGwAFYBjQFWAWYBjQFmAYkBjgGLAY8BjgGKAYsBkAGNAYkBkQGMAXMAkgGOAY8BkwGNAZABlAGNAZMBlQGwAI0BlgGPAZcBlgGSAY8BmAGNAZQBmQGaAZsBnAGNAZgBnQGZAZsBngGWAZcBnwGNAZwBoAGbAaEBoAGhAaIBoAGiAZEBoAGRAXMAoAGdAZsBowGXAaQBowGeAZcBpQGwAJUBpgGjAaQBpgGkAacBqAGgAXMAqQGmAacBqQGnAaoBqQGqAagBqwGlAZUBrAGpAagBrQGsAagBrgGtAagBrwGwAasBrwGrAbEBsgGoAXMAsgGuAagBswGyAXMAtAGzAXMAtQGwAa8BtQG2AbABtwG4AbkBtwG5AboBtwG6AbsBtwG7AbQBvAG2AbUBvQG+AbwBvwG8Ab4BwAG8Ab8BwQG9AbwBwgG0AXMAwgG3AbQBwwG2AbwBwwG8AcABxAG2AcMBxQG2AcQB0QCwAKUB0QClAbYBxgHHAcgByQHIAcoByQHKAcsByQHGAcgBzAHJAcsBzAHLAc0BzgHCAXMAzwHMAc0B0AHPAc0B0AHNAdEB0gHTAdQB1QHSAdQB1QHUAdAB1gHUAdMB1wHVAdAB2AHFAdkB2AHZAdQB2AHUAdYB2gHQAdEB2gHRAdsB2gHXAdAB3AHFAdgB3AHRALYB3AG2AcUB3QHRANwB3gHRAN0B3wHRAN4B4AHhAdoB4gHaAeEB4wHaAdsB4wHgAdoB5AHlAdoB5AHaAeIB5gHjAdsB5wHlAeQB6AHmAdsB6QHlAecB6gHbAesB6gHoAdsB7AHqAesB7QHuAe8B7QHvAfAB7QHwAfEB7QHxAfIB7QHyAfMB7QHzAfQB7QH0AfUB7QH1AfYB7QH2AfcB7QH3AeUB7QHlAekB+AHsAesB+QH6AfsB+QH7AfwB/QH4AesB/gH5AfwB/gH8Ae4B/gHuAe0B/wH+Ae0BAAL9AesBAQL/Ae0BAgIAAusBAwLfAQQCAwIEAgUCAwIFAgYCAwIGAgcCAwIHAggCAwIIAgkCAwIJAgoCAwLRAN8BCwICAusBDAILAusBDQLRAAMCDgIPAg0CEAINAg8CEQINAhACEgLRAA0CEgINAhECEwLRABICFAIVAhYCFAIWAhcCGAIVAhQCGAIZAhUCGgIbAhwCHQIxAdEAHQLRABMCHgIaAhwCHwIwATEBHwIxAR0CIAIeAhwCIAIcAiECIAIhAiICIAIiAiMCJAIeATABJAIwAR8CJQIdAR4BJQIeASQCJgIXAR0BJgIdASUCJwIoAikCJwIpAioCJwIqAisCLAInAisCLAIrAi0CLAItAi4CLAIuAi8CLAIvAhkCMAIxAjICMAIyAjMCMAIzAjQCMAI0AjUCNgIZAhgCNgIYAjcCNgI3AjgCNgIsAhkCGAEXASYCGAEmAjkCOgI2AjgCOgI4AjsCLgEYATkCLgE5AjwCLQEuATwCLQE8Aj0C3wAtAT0C3wA9Aj4C3wA+Aj8C3wA/AkACMgHfAEACdQDOAXMAdQAwAjUCdQAMAusBdQA6AjsCdQBBAkICdQAyAUACdQA1AiACdQA7AjACdQBCAs4BdQDrAUECdQBAAjoCdQAgAiMCdQAjAkMCdQBDAgwCPwFAATIBPgF1ADsBPgE7ATwBPgE8AT0BPgEyAXUAPgE/ATIBSQFWAbAATgFjAWEBTgFhAVMBRAKNAUUCRQKNAZ8BlQHCAc4BlQHOAbEBlQGxAasBQQK1Aa8BQQKvAUICMAIDAkYCRgIDAgoCMAJGAjECSAFHAocAhwBHAoUAiABIAkQBSAKEAEcCRwKEAIUAiACEAEgCRAFIAkkCRAFJAkMBSgJHAUYBSgJGAUsCSQJCAUMBTAJJAkoCTAJKAksCTAJCAUkCQgFMAk0CQgFNAkEBQQFOAkUBQQFNAk4CSwJGAUUBSwJFAU4CRwJIAUcBRwJHAUoCWAFjAU8CWAFPAlACTwJOAVECYwFOAU8CUQJNAVICTgFNAVECTQFWAVMCTQFTAlICVgFJAVQCVgFUAlMCSQFKAVUCSQFVAlQCVQJZAVYCSgFZAVUCWQFYAVACWQFQAlYCVwKgAVgCVwJYAlkCVwJZAloCVwJaAlsCVwJbApoBVwKdAaABVwKZAZ0BVwKaAZkBoAGoAVwCoAFcAlgCXQKkAV4CXQJeAl8CXQJfAmACXQJgAlwCXQJcAqgBXQKnAaQBXQKqAacBXQKoAaoBYQKXAWICYQJiAl4CYQJeAqQBYQKkAZcBlwGPAWMClwFjAmICZAKLAWUCZAJlAmMCZAJjAo8BZAKPAYsBZgKDAWcCZgJnAmgCZgJoAmkCZgJpAmUCZgJlAosBZgKEAYMBZgKIAYQBZgKLAYgBagJmAWsCagJrAmwCagJsAm0CagJtAmcCagJnAoMBagKGAWYBagKCAYYBagKDAYIBbgJXAW8CbgJvAnACbgJwAmsCbgJrAmYBbgJaAVcBbgJmAVoBcQJSAXICcQJyAnMCcQJzAnQCcQJ0Am8CcQJvAlcBcQJUAVIBcQJVAVQBcQJXAVUBdQJLAXYCdQJ2AncCdQJ3AngCdQJ4AnICdQJyAlIBdQJMAUsBdQJQAUwBdQJSAVABeQJTAXoCeQJ6AnsCeQJ7AnwCeQJ8AnYCeQJ2AksBeQJRAVMBeQJPAVEBeQJLAU8BUwFgAX0CUwF9AnoCfgJwAX8CfgJ/AoACfgKAAoECfgKBAoICfgKCAn0CfgJ9AmABfgJxAXABfgJyAXEBfgJzAXIBfgJgAXMBgwJsAYQCgwKEAoUCgwKFAoYCgwKGAocCgwKHAn8CgwJ/AnABgwJtAWwBgwJuAW0BgwJvAW4BgwJwAW8BiAJ3AYkCiAKJAooCiAKKAosCiAKLAowCiAKMAoQCiAKEAmwBiAJ4AXcBiAJqAXgBiAJrAWoBiAJsAWsBjQJ7AY4CjQKOAo8CjQKPApACjQKQApECjQKRAokCjQKJAncBjQJ6AXsBjQJ1AXoBjQJ2AXUBjQJ3AXYBkgJ9AZMCkgKTAo4CkgKOAnsBkgJ7AX0BlAJpAZUClAKVApMClAKTAn0BlAJ9AWkBlgJlAZcClgKXApUClgKVAmkBlgJpAWUBmAJdAZkCmAKZApoCmAKaApsCmAKbApcCmAKXAmUBmAJfAV0BmAJiAV8BmAJlAWIBnAJeAZ0CnAKdAp4CnAKeAp8CnAKfApkCnAKZAl0BnAJbAV4BnAJcAVsBnAJdAVwBoAJnAaECoAKhAqICoAKiAqMCoAKjAp0CoAKdAl4BoAJkAWcBoAJhAWQBoAJeAWEBpAJ8AaUCpAKlAqYCpAKmAqcCpAKnAqgCpAKoAqECpAKhAmcBpAJ5AXwBpAJ0AXkBpAJoAXQBpAJnAWgBfAGpAqUCfAF+AakCqgKMAasCqgKrAqwCqgKsAq0CqgKtAqkCqgKAAYwBqgJ/AYABqgJ+AX8BqgKpAn4BrgKhAa8CrgKvArACrgKwArECrgKxAqsCrgKrAowBrgKiAaEBrgKRAaIBrgKMAZEBsgKaAVsCsgJbArMCsgKzAq8CsgKvAqEBsgKbAZoBsgKhAZsBtwHCAbQCtwG0ArUCwgGVAbYCwgG2ArQClQGNAbcClQG3ArYCjQFEArgCjQG4ArcCuQKcAboCuQK6ArsCuQK7ArwCuQK8ArgCuQK4AkQCuQKfAZwBuQJFAp8BuQJEAkUCvQKTAb4CvQK+Ar8CvQK/AsACvQLAAroCvQK6ApwBvQKUAZMBvQKYAZQBvQKcAZgBwQKFAcICwQLCAsMCwQLDAsQCwQLEAr4CwQK+ApMBwQKJAYUBwQKQAYkBwQKTAZABxQKKAcYCxQLGAscCxQLHAsgCxQLIAsICxQLCAoUBxQKHAYoBxQKBAYcBxQKFAYEBigHJAsYCigGOAckCygKWAcsCygLLAswCygLMAskCygKSAZYBygKOAZIBygLJAo4BzQKmAc4CzQLOAs8CzQLPAtACzQLQAssCzQLLApYBzQKjAaYBzQKeAaMBzQKWAZ4B0QKtAdIC0QLSAtMC0QLTAtQC0QLUAs4C0QLOAqYB0QKsAa0B0QKpAawB0QKmAakB1QKzAdYC1QLWAtcC1QLXAtgC1QLYAtIC1QLSAq0B1QKyAbMB1QKuAbIB1QKtAa4BuQG4AdkCuQHZAtoCswHbAtYCswG0AdsC3ALaAt0C3ALdAt4C3ALeAtsC3AK6AbkB3AK7AboB3AK0AbsB3AK5AdoC3ALbArQBuAG3AbUCuAG1AtkCqwGwAd8CqwHfAuACsAG2AeECsAHhAt8CtgGlAeICtgHiAuECpQGrAeACpQHgAuICzgFCAuMCzgHjAuQC4wKvAeUCQgKvAeMCrwGxAeYCrwHmAuUCsQHOAeQCsQHkAuYCQQLrAecCQQLnAugC6wHbAekC6wHpAucC6gLNAesC6gLrAuwC6gLsAukC6gLpAtsB6gLRAc0B6gLbAdEB7QLIAe4C7QLuAu8C7QLvAvAC7QLwAusC7QLrAs0B7QLKAcgB7QLLAcoB7QLNAcsB8QLJAfIC8QLyAvMC8QLzAvQC8QL0Au4C8QLuAsgB8QLGAckB8QLHAcYB8QLIAccB9QLQAfYC9QL2AvcC9QL3AvgC9QL4AvIC9QLyAskB9QLPAdAB9QLMAc8B9QLJAcwB0AHUAfkC0AH5AvYC+gLEAfsC+gL7AvwC+gL8Av0C+gL9AvkC+gL5AtQB+gLFAcQB+gLZAcUB+gLUAdkB/gK/Af8C/gL/AgAD/gIAAwED/gIBA/sC/gL7AsQB/gLAAb8B/gLDAcAB/gLEAcMBAgPBAQMDAgMDAwQDAgMEAwUDAgMFA/8CAgP/Ar8BAgO9AcEBAgO+Ab0BAgO/Ab4BwQG8AQYDwQEGAwMDvAG1AQcDvAEHAwYDtQFBAugCtQHoAgcDCAMgAgkDCAMJAwoDCAMKAwsDCAMLAwwDCAMMAxsCCAMeAiACCAMaAh4CCAMbAhoCIAI1Ag0DIAINAwkDDgMyAg8DDgMPAxADDgMQAxEDDgMRAw0DDgMNAzUCDgMzAjICDgM0AjMCDgM1AjQCEgMxAhMDEgMTAw8DEgMPAzICEgMyAjECMQJGAhQDMQIUAxMDFQMKAhYDFQMWAxQDFQMUA0YCFQNGAgoCFwMHAhgDFwMYAxkDFwMZAxoDFwMaAxYDFwMWAwoCFwMIAgcCFwMJAggCFwMKAgkCGwMEAhwDGwMcAx0DGwMdAx4DGwMeAxgDGwMYAwcCGwMFAgQCGwMGAgUCGwMHAgYCHwPeASADHwMgAyEDHwMhAxwDHwMcAwQCHwPfAd4BHwMEAt8BIgPYASMDIgMjAyQDIgMkAyUDIgMlAyADIgMgA94BIgPcAdgBIgPdAdwBIgPeAd0BJgPSAScDJgMnAygDJgMoAykDJgMpAyMDJgMjA9gBJgPTAdIBJgPWAdMBJgPYAdYBKgPaASsDKgMrAywDKgMsAy0DKgMtAycDKgMnA9IBKgPXAdoBKgPVAdcBKgPSAdUB2gHlAS4D2gEuAysDLwP0ATADLwMwAzEDLwMxAzIDLwMyAzMDLwMzAy4DLwMuA+UBLwP1AfQBLwP2AfUBLwP3AfYBLwPlAfcBNAPwATUDNAM1AzYDNAM2AzcDNAM3AzgDNAM4AzADNAMwA/QBNAPxAfABNAPyAfEBNAPzAfIBNAP0AfMBOQP7AToDOQM6AzsDOQM7AzwDOQM8Az0DOQM9AzUDOQM1A/ABOQP8AfsBOQPuAfwBOQPvAe4BOQPwAe8BPgP/AT8DPgM/A0ADPgNAA0EDPgNBA0IDPgNCAzoDPgM6A/sBPgP+Af8BPgP5Af4BPgP6AfkBPgP7AfoBQwMBAkQDQwNEAz8DQwM/A/8BQwP/AQECRQPtAUYDRQNGA0QDRQNEAwECRQMBAu0BRwPpAUgDRwNIA0YDRwNGA+0BRwPtAekBSQPiAUoDSQNKA0sDSQNLA0wDSQNMA0gDSQNIA+kBSQPkAeIBSQPnAeQBSQPpAecBTQPjAU4DTQNOA08DTQNPA1ADTQNQA0oDTQNKA+IBTQPgAeMBTQPhAeABTQPiAeEBUQPqAVIDUQNSA1MDUQNTA1QDUQNUA04DUQNOA+MBUQPoAeoBUQPmAegBUQPjAeYBVQMAAlYDVQNWA1cDVQNXA1gDVQNYA1kDVQNZA1IDVQNSA+oBVQP9AQACVQP4Af0BVQPsAfgBVQPqAewBAAJaA1YDAAICAloDWwNDAlwDWwNcA10DWwNdA14DWwNeA1oDWwMMAkMCWwMLAgwCWwMCAgsCWwNaAwICXwMhAmADXwNgA2EDXwNhA2IDXwNiA1wDXwNcA0MCXwMiAiECXwMjAiICXwNDAiMCYwMbAgwDYwMMA2QDYwNkA2ADYwNgAyECYwMcAhsCYwMhAhwCMAI7AmUDMAJlA2YDOwI4AmcDOwJnA2UDFwIWAmgDFwJoA2kDOAJqA2cDOAI3AmoDawNpA2wDawNsA20DawNtA2oDawMUAhcCawMYAhQCawM3AhgCawNqAzcCawMXAmkDbgMuAm8DbgNvA3ADbgNwA3EDbgNxA3IDbgNyA2gDbgNoAxYCbgMvAi4CbgMZAi8CbgMVAhkCbgMWAhUCcwMqAnQDcwN0A3UDcwN1A3YDcwN2A28DcwNvAy4CcwMrAioCcwMtAisCcwMuAi0CdwMnAngDdwN4A3kDdwN5A3oDdwN6A3QDdwN0AyoCdwMoAicCdwMpAigCdwMqAikCewM2AnwDewN8A30DewN9A3gDewN4AycCewMsAjYCewMnAiwCNgI6An4DNgJ+A3wDOgJAAn8DOgJ/A34DQAI/AoADQAKAA38DgQM+AoIDgQOCA4ADgQOAAz8CgQM/Aj4CgwM5AoQDgwOEA4UDgwOFA4YDgwOGA4IDgwOCAz4CgwM8AjkCgwM9AjwCgwM+Aj0ChwMkAogDhwOIA4kDhwOJA4oDhwOKA4QDhwOEAzkChwMlAiQChwMmAiUChwM5AiYCiwMTAowDiwOMA40DiwONA44DiwOOA4gDiwOIAyQCiwMdAhMCiwMfAh0CiwMkAh8CDwIOAo8DDwKPA5ADEwKRA4wDEwISApEDkgOQA5MDkgOTA5QDkgOUA5EDkgMQAg8CkgMRAhACkgMSAhECkgORAxICkgMPApADDgINApUDDgKVA48DAwKWA5UDDQIDApUDAwIwAmYDAwJmA5YDSAJHAkoCSAJKAkkCTAJLAk4CTAJOAk0CVgJUAlUCUQJWAlACUQJQAk8CUwJRAlICUwJUAlYCUwJWAlEClwOpAq0CmAOpApcDmAOlAqkCmQOlApgDmQOmAqUCmQOnAqYCmgOXA60CmgOtAqwCmwOnApkDmwOoAqcCnAOaA6wCnAOsAqsCnQOoApsDnQOiAqECnQOhAqgCngOcA6sCnwOiAp0DnwOjAqICoAOeA6sCoAOxArACoAOrArECoQOjAp8DoQOeAp0CoQOdAqMCogOeAqEDnwKeAqIDowOgA7ACowOwAq8CpAOfAqIDmQKfAqQDpQOjA68CpgOZAqQDswKlA68CmgKZAqYDpwOlA7MCmwKaAqYDmwKmA6gDqQOnA7MClwKbAqgDWwKpA7MCqgOXAqgDqwOpA1sCfQJ7AnoCYAJYAlwCrAOrA1sCggJ8AnsCggJ7An0CXwJYAmACXwJZAlgClQKXAqoDXgJaAlkCXgJbAloCXgJZAl8CXgKsA1sCgQJ8AoICgQJ2AnwCrQOsA14CrgOVAqoDgAJ2AoECdwJ2AoACeAJ3AoACeAKAAn8CeAJ/AocCcgKHAoYCcgJ4AocCYgKtA14CYgKvA7ADYgKxA60DYgKwA7EDkwKVAq4DkwKuA68DcwKGAoUCcwJyAoYCdAKFAoQCdAJzAoUCbwKEAowCbwJ0AoQCYwKvA2ICYwKPAo4CYwKOApMCYwKTAq8DcAKLAooCcAKMAosCcAJvAowCZQKQAo8CZQKPAmMCawKKAokCawJwAooCaQKQAmUCaAKRApACaAKQAmkCbAJrAokCbQKJApECbQJsAokCZwJtApECZwKRAmgCsgPUAtMCswPTAtICswPSAtgCswOyA9MCtAPUArIDtQPYAtcCtQOzA9gCtgPPAs4CtgPOAtQCtgPUArQDtwPXAtYCtwO1A9cCuAPQAs8CuAPPArYDuQPWAtsCuQO3A9YCugO5A9sCugPeAt0CugPbAt4CuwPQArgDuwPLAtACvAO6A90C2gK8A90CvQO8A9oCvgPMAssCvgPLArsDvgPJAswC2QK9A9oCvwO9A9kCtALZArUCwAPGAskCwAPJAr4DwQO/A9kCwgPHAsYCwgPGAsADwwPZArQCwwPBA9kCxAPHAsIDyALHAsQDxQPIAsQDxgPDA7QCwgLFA8cDwgLIAsUDyAPGA7QCwwLHA8kDwwLCAscDygPIA7QCxALJA8sDxALDAskDvgLLA8wDvgLEAssDvwLMA80DvwK+AswDwALNA84DwAK/As0DugLAAs4DuwLOA88DuwK6As4DuALPA9ADuALRA8oDuALSA9EDuALQA9IDvALPA7gCvAK7As8DtgLKA7QCtgK4AsoDtwK4ArYC4QLiAuAC4QLgAt8C5gLkAuMC5QLmAuMC6QLoAucCAwPsAusCAwPrAvACBwPpAuwCBwPsAgMDBwPoAukC7wIDA/AC7gIDA+8CBAPuAvQCBAMDA+4CBgMHAwMDBQP0AvMCBQMEA/QC/wIFA/MCAAPzAvICAAP/AvMCAQMAA/IC+wIBA/IC/ALyAvgC/AL7AvIC/QL4AvcC/QL8AvgC+QL3AvYC+QL9AvcC0wNaA14D1ANaA9MD1ANWA1oD1QNWA9QD1QNXA1YD1QNYA1cD1gPTA14D1gNeA10D1wNYA9UD1wNZA1gD2APWA10D2ANdA1wD2QNZA9cD2QNTA1ID2QNSA1kD2gPYA1wD2wNTA9kD2wNUA1MD3APaA1wD3ANiA2ED3ANcA2ID3QNUA9sD3QNPA04D3QNOA1QD3gNPA90DUANPA94D3wPcA2ED3wNhA2AD4ANQA94DSgNQA+AD4QPfA2AD4gNKA+ADZAPhA2ADSwNKA+ID4wPhA2QDTANLA+IDTAPiA+QD5QPjA2QDSANMA+QDDAPlA2QD5gNIA+QD5wPlAwwDLgMsAysDEQMJAw0D6APnAwwDMwMtAywDMwMsAy4DEAMJAxEDEAMKAwkDRgNIA+YDDwMLAwoDDwMMAwsDDwMKAxADDwPoAwwDMgMtAzMDMgMnAy0D6QPoAw8D6gNGA+YDMQMnAzIDKAMnAzEDKQMoAzEDKQMxAzADKQMwAzgDIwM4AzcDIwMpAzgDEwPpAw8DEwPrA+wDEwPtA+kDEwPsA+0DRANGA+oDRAPqA+sDJAM3AzYDJAMjAzcDJQM2AzUDJQMkAzYDIAM1Az0DIAMlAzUDFAPrAxMDFANAAz8DFAM/A0QDFANEA+sDIQM8AzsDIQM9AzwDIQMgAz0DFgNBA0ADFgNAAxQDHAM7AzoDHAMhAzsDGgNBAxYDGQNCA0EDGQNBAxoDHQMcAzoDHgM6A0IDHgMdAzoDGAMeA0IDGANCAxkDZwNmA2UDlgNnA2oDlgNmA2cDjwNsA2kDjwNtA2wDjwNqA20DjwOWA2oDaAOPA2kDkANoA3IDkAOPA2gDlQOWA48DcQOQA3IDkwNxA3ADkwOQA3EDfAN+A38DlAOTA3ADkQNwA28DkQOUA3ADgAN9A3wDgAN8A38DjANvA3YDjAORA28DjQN2A3UDjQOMA3YDggN4A30DggN9A4ADjgONA3UDjgN1A3QDhgN4A4IDiAOOA3QDiAN0A3oDhQN4A4YDhQN5A3gDiQOIA3oDhAN5A4UDigOJA3oDigN6A3kDigN5A4QD7gPvA68D7gOvA64D7gOuA6oD7gOqA/AD7gPxA+8D7gPwA/ED7wPyA7AD7wOwA68D8wP0A6wD8wOsA60D8wOtA7ED8wOxA7AD8wOwA/ID8wP1A/QD8wP2A/UD8wPyA/YD9wP4A6cD9wOnA6kD9wOpA6sD9wOrA6wD9wOsA/QD9wP5A/gD9wP6A/kD9wP0A/oD+wP8A6AD+wOgA6MD+wOjA6UD+wOlA6cD+wOnA/gD+wP9A/wD+wP+A/0D+wP4A/4D/wMABJcD/wOXA5oD/wOaA5wD/wOcA54D/wOeA6AD/wOgA/wD/wMBBAAE/wMCBAEE/wMDBAIE/wP8AwMEBAQFBJ0DBASdA5sDBASbA5kDBASZA5gDBASYA5cDBASXAwAEBAQGBAUEBAQHBAYEBAQIBAcEBAQABAgECQQKBKIDCQSiA6EDCQShA58DCQSfA50DCQSdAwUECQQLBAoECQQMBAsECQQFBAwEDQQOBKgDDQSoA6YDDQSmA6QDDQSkA6IDDQSiAwoEDQQPBA4EDQQQBA8EDQQKBBAEEQTwA6oDEQSqA6gDEQSoAw4EEQQOBPADEgQTBLsDEgS7A7gDFAS0A7IDFAQVBLQDFgS4A7YDFgS2A7QDFgQXBBIEFgQVBBcEFgS0AxUEFgQSBLgDGAQZBMQDGATEA8IDEwS+A7sDEwQaBL4DGwTCA8ADGwTAA74DGwQcBBgEGwQaBBwEGwS+AxoEGwQYBMIDGQTFA8QDGQQdBMUDHgQfBMwDHgTMA8sDHgTLA8kDHgTJA8cDHgTHA8UDHgQgBB8EHgQhBCAEHgQiBCEEHgQdBCIEHgTFAx0EIwQkBNADIwTQA88DIwTPA84DIwTOA80DIwTNA8wDIwTMAx8EIwQlBCQEIwQmBCUEIwQnBCYEIwQfBCcEKAQpBMgDKATIA8oDJATSA9ADJAQqBNIDKwTKA9EDKwTRA9IDKwQsBCgEKwQqBCwEKwTSAyoEKwQoBMoDLQQuBL8DLQS/A8EDKQTGA8gDKQQvBMYDMATBA8MDMATDA8YDMAQxBC0EMAQvBDEEMATGAy8EMAQtBMEDMgQzBLkDMgS5A7oDMgS6A7wDMgS8A70DMgS9A78DMgS/Ay4EMgQ0BDMEMgQ1BDQEMgQ2BDUEMgQuBDYENwQUBLIDNwSyA7MDNwSzA7UDNwS1A7cDNwS3A7kDNwS5AzMENwQ4BBQENwQ5BDgENwQ6BDkENwQzBDoEOwQ8BOsDOwTrA+oDOwTqA+YDOwTmAz0EOwQ+BDwEOwQ9BD4EPAQ/BOwDPATsA+sDQARBBOgDQAToA+kDQATpA+0DQATtA+wDQATsAz8EQARCBEEEQARDBEIEQAQ/BEMERARFBOMDRATjA+UDRATlA+cDRATnA+gDRAToA0EERARGBEUERARHBEYERARBBEcESARJBNwDSATcA98DSATfA+EDSAThA+MDSATjA0UESARKBEkESARLBEoESARFBEsETARNBNMDTATTA9YDTATWA9gDTATYA9oDTATaA9wDTATcA0kETAROBE0ETARPBE4ETARQBE8ETARJBFAEUQRSBNkDUQTZA9cDUQTXA9UDUQTVA9QDUQTUA9MDUQTTA00EUQRTBFIEUQRUBFMEUQRVBFQEUQRNBFUEVgRXBN4DVgTeA90DVgTdA9sDVgTbA9kDVgTZA1IEVgRYBFcEVgRZBFgEVgRSBFkEWgRbBOQDWgTkA+IDWgTiA+ADWgTgA94DWgTeA1cEWgRcBFsEWgRdBFwEWgRXBF0EXgQ9BOYDXgTmA+QDXgTkA1sEXgRbBD0ECgQPBBAEDAQKBAsEDAQPBAoEBQQOBA8EBQQPBAwECAQFBAYECAQGBAcEAAQOBAUEAAQFBAgEAQQOBAAEAgQOBAEEAwQOBAIE8gPvA/ED/APwAw4E/AMOBAME9gPyA/ED/QPwA/wD9QP2A/ED/gPwA/0D9AP1A/ED+APwA/4D+gPxA/AD+gP0A/ED+QP6A/AD+QPwA/gDIAQhBCIEHwQiBB0EHwQgBCIEJQQmBCcEJQQnBB8EJQQdBBkEJQQfBB0EJAQZBBgEJAQlBBkEKgQkBBgELAQYBBwELAQqBBgEKAQcBBoEKAQaBBMEKAQsBBwEKQQTBBIEKQQoBBMELwQpBBIEMwQ4BDkEMwQ5BDoEMQQSBBcEMQQXBBUEMQQvBBIELQQVBBQELQQxBBUENgQzBDQENgQ0BDUENgQ4BDMELgQUBDgELgQtBBQELgQ4BDYEVwRcBF0EWQRXBFgEWQRcBFcEUgRbBFwEUgRcBFkEVQRSBFMEVQRTBFQETQRbBFIETQRSBFUETgRbBE0ETwRbBE4EUARbBE8EPwQ8BD4ESQQ9BFsESQRbBFAEQwQ/BD4ESgQ9BEkEQgRDBD4ESwQ9BEoEQQRCBD4ERQQ9BEsERwQ+BD0ERwRBBD4ERgRHBD0ERgQ9BEUE","ib":2,"geo":{"v":1,"c0":[-1.277395248413086,0,37.5],"dim":[64.06521224975586,62,75],"hid":[0,0,0],"hole":[],"boss":[],"slope":[{"u":2,"w":0,"a0":25.000001154466787},{"u":0,"w":2,"a0":25.000007259746774}],"st":{"U":1.0395,"k":[0.9935998285981806,1.1024220701640053,1.0447330447330447],"hf":[],"df":[],"sf":[1,1]}},"ui":{"off":["pxy","pxz","pyz","sl1","sl0"],"lab":{},"rg":{}}}</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script id="app">
+const CORE=new Function(document.getElementById('core-src').textContent+';return {parseOBJ,parseFreeCAD,simplifyThreads,weld,expand,canon,geoDetect,geoApply,geoMeta,geoParams,geoSet,geoVals,geoState,geoOff,buildEntryGeo,slug,b64dec,faceNormals}')();
+const {parseOBJ,parseFreeCAD,simplifyThreads,weld,expand,canon,geoDetect,geoApply,geoMeta,geoParams,geoSet,geoVals,geoState,geoOff,buildEntryGeo,slug,b64dec,faceNormals}=CORE;
+const $=id=>document.getElementById(id);
+const cv=$('c'),r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+r.setPixelRatio(Math.min(devicePixelRatio,2));
+const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,1,1,5000);
+sc.add(new THREE.HemisphereLight(0xffffff,0x667788,.8));
+const d1=new THREE.DirectionalLight(0xffffff,.9);d1.position.set(1,1.5,1);cam.add(d1);sc.add(cam);
+const d2=new THREE.DirectionalLight(0xffffff,.3);d2.position.set(-1,.3,-1);sc.add(d2);
+const mat=new THREE.MeshStandardMaterial({color:0x4a4d52,metalness:.1,roughness:.55,side:THREE.DoubleSide});
+const ctl=new THREE.OrbitControls(cam,cv);ctl.enableDamping=true;ctl.autoRotate=true;ctl.autoRotateSpeed=1.5;
+const grp=new THREE.Group();sc.add(grp);
+let canonC=null,baseRaw=null,baseIdx=null,G=null,g=null,st=null,NB=null,geo=null,grid=null,fileName='',rad=1,hgt=1,out=null,W=null,viewer=false,viewerName='';
+const UI={off:new Set(),lab:{ru:{},en:{},he:{}}};let labLang='ru';
+const GROUPS=[['Масштаб и размеры',['sc','ax','pr']],['Диаметры',['dm']],['Отверстия',['ho']],['Уклоны',['sp']]];
+let ROWS={};
+
+function buildNB(){
+  NB=null;if(!canonC||!$('bs').classList.contains('on'))return;
+  const pos=canonC.pos,n=canonC.n,fn=faceNormals(pos,n),c=Math.cos(40*Math.PI/180),map=new Map();
+  const key=i=>Math.round(pos[i*3]*1e4)+','+Math.round(pos[i*3+1]*1e4)+','+Math.round(pos[i*3+2]*1e4);
+  for(let i=0;i<n*3;i++){const k=key(i);(map.get(k)||map.set(k,[]).get(k)).push((i/3)|0)}
+  const off=new Int32Array(n*3+1),list=[];
+  for(let i=0;i<n*3;i++){
+    const f=(i/3)|0;
+    for(const j of map.get(key(i)))if(fn[j*3]*fn[f*3]+fn[j*3+1]*fn[f*3+1]+fn[j*3+2]*fn[f*3+2]>c)list.push(j);
+    off[i+1]=list.length;
+  }
+  NB={off,list:Int32Array.from(list)};
+}
+function refresh(fit){
+  if(!canonC)return;
+  const n=canonC.n,I=canonC.I,zu=$('bz').classList.contains('on');
+  geoApply(canonC.U,G,st,W);
+  for(let t=0;t<n*3;t++){const q=I[t]*3;out[t*3]=W[q];out[t*3+1]=W[q+1];out[t*3+2]=W[q+2]}
+  const fn=faceNormals(out,n),nr=new Float32Array(n*9);
+  for(let i=0;i<n*3;i++){
+    let x=0,y=0,z=0;
+    if(NB){for(let q=NB.off[i];q<NB.off[i+1];q++){const j=NB.list[q]*3;x+=fn[j];y+=fn[j+1];z+=fn[j+2]}}
+    else{const j=((i/3)|0)*3;x=fn[j];y=fn[j+1];z=fn[j+2]}
+    const l=Math.hypot(x,y,z)||1;
+    if(zu){nr[i*3]=x/l;nr[i*3+1]=z/l;nr[i*3+2]=-y/l}else{nr[i*3]=x/l;nr[i*3+1]=y/l;nr[i*3+2]=z/l}
+  }
+  const w=geo.attributes.position.array;
+  let mn=[1e9,1e9,1e9],mxv=[-1e9,-1e9,-1e9];
+  for(let v=0;v<n*3;v++){
+    const x=out[v*3],y=out[v*3+1],z=out[v*3+2];
+    const q=zu?[x,z,-y]:[x,y,z];
+    for(let k=0;k<3;k++){w[v*3+k]=q[k];if(q[k]<mn[k])mn[k]=q[k];if(q[k]>mxv[k])mxv[k]=q[k]}
+  }
+  const cx=(mn[0]+mxv[0])/2,cz=(mn[2]+mxv[2])/2;
+  for(let v=0;v<n*3;v++){w[v*3]-=cx;w[v*3+1]-=mn[1];w[v*3+2]-=cz}
+  geo.attributes.position.needsUpdate=true;
+  geo.attributes.normal.array.set(nr);geo.attributes.normal.needsUpdate=true;
+  geo.computeBoundingSphere();
+  hgt=mxv[1]-mn[1];rad=Math.max(mxv[0]-mn[0],hgt,mxv[2]-mn[2])||1;
+  if(fit){
+    if(grid)sc.remove(grid);
+    grid=new THREE.GridHelper(rad*6,24,0x888888,0x888888);grid.material.transparent=true;grid.material.opacity=.25;sc.add(grid);
+    view();
+  }
+  const sm=[1e9,1e9,1e9],sM=[-1e9,-1e9,-1e9];
+  for(let v=0;v<n*3;v++)for(let k=0;k<3;k++){const x=out[v*3+k];if(x<sm[k])sm[k]=x;if(x>sM[k])sM[k]=x}
+  const dm=[0,1,2].map(k=>sM[k]-sm[k]); // X, Y, Z исходной модели
+  $('info').innerHTML='<b>'+(viewer?viewerName:fileName).replace(/</g,'&lt;')+'</b><br>'+n.toLocaleString('ru')+' треугольников<br>X × Y × Z: '+dm.map(x=>x.toFixed(1)).join(' × ')+' мм'+(viewer?'':'<br>Найдено: отверстий '+g.hole.length+', диаметров '+g.boss.length+', уклонов '+g.slope.length);
+  syncUI();
+}
+function makeMesh(){
+  grp.clear();const n=canonC.n;
+  geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*9),3));
+  geo.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(n*9),3));
+  grp.add(new THREE.Mesh(geo,mat));out=new Float32Array(n*9);W=new Float32Array(canonC.U.length);
+}
+const plist=()=>geoParams({...g,st});
+const labText=(p,l)=>UI.lab[l][p.key]||p.lab[l];
+function row(parent,p,onset){
+  const d=document.createElement('div');d.className='row'+(UI.off.has(p.key)?' off':'');
+  d.innerHTML='<div class="h'+(p.kind==='sc'?' t':'')+'">'+(viewer?'':'<input type="checkbox" class="chk conv-only">')+(viewer?'<span class="lt"></span>':'<input class="lt" type="text" spellcheck="false">')+'<input type="number" step="0.1" min="0.1"></div><input type="range" step="0.05">';
+  const lt=d.querySelector('.lt'),num=d.querySelector('input[type=number]'),rg=d.querySelector('input[type=range]'),chk=d.querySelector('.chk');
+  if(viewer)lt.textContent=labText(p,'ru');else lt.value=labText(p,labLang);
+  rg.min=p.min;rg.max=p.max;
+  rg.oninput=()=>onset(+rg.value);
+  num.onchange=()=>{const v=+num.value;if(v>0)onset(v);else syncUI()};
+  if(!viewer){
+    chk.checked=!UI.off.has(p.key);
+    chk.onchange=()=>{if(chk.checked)UI.off.delete(p.key);else UI.off.add(p.key);d.classList.toggle('off',!chk.checked)};
+    lt.oninput=()=>{const v=lt.value.trim();if(v&&v!==p.lab[labLang])UI.lab[labLang][p.key]=v;else delete UI.lab[labLang][p.key]};
+  }
+  parent.appendChild(d);return {num,rg,p};
+}
+function buildUI(){
+  const box=$('axes');box.innerHTML='';ROWS={};
+  const pl=plist();
+  GROUPS.forEach(([title,kinds])=>{
+    const items=pl.filter(p=>kinds.indexOf(p.kind)>=0&&!(viewer&&UI.off.has(p.key)));
+    if(!items.length)return;
+    const gdiv=document.createElement('div');gdiv.className='ax';
+    const tt=document.createElement('b');tt.textContent=title;gdiv.appendChild(tt);
+    items.forEach(p=>{ROWS[p.key]=row(gdiv,p,v=>{geoSet(g,st,p.key,v);refresh()})});
+    box.appendChild(gdiv);
+  });
+}
+function syncUI(){
+  const vals=geoVals(g,st);
+  for(const k in ROWS){
+    const e=ROWS[k],v=vals[k];
+    if(document.activeElement!==e.num)e.num.value=+v.toFixed(2);e.rg.value=v;
+  }
+}
+function setup(c,meta,off,lab){
+  canonC=c;G=geoDetect(c.U,c.I);
+  g=meta||geoMeta(G,null);
+  if(!meta)g.st=geoState(G.holes.length,G.bosses.length,G.slopes.length);
+  st=JSON.parse(JSON.stringify(g.st));
+  while(st.hf.length<G.holes.length)st.hf.push(1);while(st.df.length<G.bosses.length)st.df.push(1);while(st.sf.length<G.slopes.length)st.sf.push(1);
+  UI.off=off?new Set(off):geoOff({geo:g});
+  UI.lab={ru:{},en:{},he:{}};
+  if(lab)for(const k in lab)for(const l in lab[k])if(UI.lab[l])UI.lab[l][k]=lab[k][l];
+  buildNB();makeMesh();buildUI();$('drop').classList.add('hide');refresh(true);
+  if(!viewer){$('bd').hidden=false;$('tools').hidden=false;$('tipSl').hidden=false}
+}
+function view(){cam.position.set(rad*1.5,hgt*.6+rad*.5,rad*2);ctl.target.set(0,hgt/2,0);ctl.minDistance=Math.max(rad*.08,1);ctl.maxDistance=rad*25;ctl.update()}
+function clip(){const d=cam.position.distanceTo(ctl.target),nr=Math.max(d*.02,.05),fr=d*20+1000;if(Math.abs(cam.near-nr)>nr*.02||Math.abs(cam.far-fr)>fr*.02){cam.near=nr;cam.far=fr;cam.updateProjectionMatrix()}}
+function applyUnit(){
+  const k=+$('unit').value,thr=$('thr').checked;let c,note='';
+  if(baseIdx){ // HTML из FreeCAD: индексная сетка
+    const U=new Float32Array(baseIdx.U.length);for(let i=0;i<U.length;i++)U[i]=baseIdx.U[i]*k;
+    if(thr){const s=simplifyThreads(U,baseIdx.I);c=canon(expand(s.U,s.I));note=s.zones}else c=canon(expand(U,baseIdx.I));
+  }else{ // OBJ
+    const p=new Float32Array(baseRaw.length);
+    for(let i=0;i<p.length;i++)p[i]=baseRaw[i]*k;
+    if(thr){const w=weld(p),s=simplifyThreads(w.U,w.I);c=canon(expand(s.U,s.I));note=s.zones}else c=canon(p);
+  }
+  setup(c);
+  $('msg').textContent='Размеры считаются в миллиметрах. Если модель получилась слишком большой или маленькой — смените «Единицы в файле».'+(thr?(note?' Резьба упрощена: заменено зон — '+note+'.':' Резьба в модели не найдена.'):'');
+}
+function load(file){
+  if(!file||viewer)return;
+  const isHtml=/\.html?$/i.test(file.name),rd=new FileReader();
+  $('info').textContent='Читаю файл '+file.name+'…';
+  rd.onload=()=>setTimeout(()=>{try{
+      const p=isHtml?parseFreeCAD(rd.result):parseOBJ(rd.result);if(!p.n)throw 0;
+      fileName=file.name;
+      if(isHtml){baseIdx={U:p.U,I:p.I};baseRaw=null;$('unit').value='1'}else{baseRaw=p.pos;baseIdx=null}
+      const base=file.name.replace(/\.[^.]+$/,'');
+      $('nr').value=$('ne').value=$('nh').value=base;
+      $('convBox').hidden=false;
+      $('info').textContent='Обработка модели…';
+      setTimeout(applyUnit,30);
+    }catch(e){console.error(e);$('info').textContent='Не удалось прочитать файл '+file.name+' как OBJ или HTML-экспорт FreeCAD'}},20);
+  rd.readAsText(file);
+}
+$('f').onchange=e=>{load(e.target.files[0]);e.target.value=''};
+addEventListener('dragover',e=>{e.preventDefault();if(!viewer)$('over').classList.add('show')});
+addEventListener('dragleave',e=>{if(!e.relatedTarget)$('over').classList.remove('show')});
+addEventListener('drop',e=>{e.preventDefault();$('over').classList.remove('show');load(e.dataTransfer.files[0])});
+$('unit').onchange=()=>{if(baseRaw||baseIdx)applyUnit()};
+$('thr').onchange=()=>{if(baseRaw||baseIdx)applyUnit()};
+document.querySelectorAll('#tools [data-ll]').forEach(b=>b.onclick=()=>{
+  labLang=b.dataset.ll;document.querySelectorAll('#tools [data-ll]').forEach(x=>x.classList.toggle('on',x===b));buildUI();syncUI();
+});
+$('allOn').onclick=()=>{UI.off=new Set();buildUI();syncUI()};
+$('onlyTot').onclick=()=>{UI.off=new Set(plist().filter(p=>p.kind!=='sc'&&p.kind!=='ax').map(p=>p.key));buildUI();syncUI()};
+$('bz').onclick=()=>{$('bz').classList.toggle('on');refresh(true)};
+$('bs').onclick=()=>{$('bs').classList.toggle('on');buildNB();refresh()};
+$('bw').onclick=()=>{mat.wireframe=!mat.wireframe;$('bw').classList.toggle('on',mat.wireframe)};
+$('br').onclick=()=>{ctl.autoRotate=!ctl.autoRotate;$('br').classList.toggle('on',ctl.autoRotate)};
+$('col').oninput=e=>mat.color.set(e.target.value);
+$('bv').onclick=view;
+$('rs').onclick=()=>{if(!canonC)return;st=geoState(G.holes.length,G.bosses.length,G.slopes.length);refresh()};
+cv.addEventListener('pointerdown',()=>{ctl.autoRotate=false;$('br').classList.remove('on')});
+
+// миниатюра для каталога сайта (серая «карта освещения»: на сайте перекрашивается в цвет модели)
+function makeThumb(){
+  try{
+    const S=240,c2=document.createElement('canvas');c2.width=c2.height=S;
+    const r2=new THREE.WebGLRenderer({canvas:c2,antialias:true,alpha:true,preserveDrawingBuffer:true});
+    r2.setPixelRatio(1);r2.setSize(S,S,false);
+    const s2=new THREE.Scene(),k2=new THREE.PerspectiveCamera(32,1,.5,1e5);
+    s2.add(new THREE.HemisphereLight(0xffffff,0x667788,.9));
+    const l1=new THREE.DirectionalLight(0xffffff,1);l1.position.set(1,1.6,1.2);s2.add(l1);
+    const l2=new THREE.DirectionalLight(0xffffff,.35);l2.position.set(-1,.3,-1);s2.add(l2);
+    s2.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0xd7d7d7,metalness:.1,roughness:.55,side:THREE.DoubleSide})));
+    geo.computeBoundingBox();geo.computeBoundingSphere();
+    const ctr=geo.boundingBox.getCenter(new THREE.Vector3()),rr=geo.boundingSphere.radius||1;
+    const dir=new THREE.Vector3(1,.8,1).normalize(),dist=rr/Math.sin(k2.fov*Math.PI/360)*1.05;
+    k2.position.copy(ctr).addScaledVector(dir,dist);k2.lookAt(ctr);k2.near=dist*.05;k2.far=dist*10;k2.updateProjectionMatrix();
+    r2.render(s2,k2);
+    let url=c2.toDataURL('image/webp',.88);if(url.indexOf('data:image/webp')!==0)url=c2.toDataURL('image/png');
+    r2.dispose();if(r2.forceContextLoss)r2.forceContextLoss();
+    return url;
+  }catch(e){return ''}
+}
+function download(name,text){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:'text/html;charset=utf-8'}));
+  a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+$('bd').onclick=()=>{
+  if(!canonC||viewer){$('msg').textContent='Сначала загрузите модель';return}
+  const base=fileName.replace(/\.[^.]+$/,'');
+  const lab={};plist().forEach(p=>{['ru','en','he'].forEach(l=>{const v=UI.lab[l][p.key];if(v&&v!==p.lab[l]){(lab[p.key]=lab[p.key]||{})[l]=v}})});
+  const keys=new Set(plist().map(p=>p.key));
+  const meta=JSON.parse(JSON.stringify({...g,st}));
+  const entry=buildEntryGeo({
+    id:slug(fileName),
+    name:{ru:$('nr').value.trim()||base,en:$('ne').value.trim()||base,he:$('nh').value.trim()||base},
+    tag:{ru:$('tr').value.trim(),en:$('te').value.trim(),he:$('th').value.trim()},
+    desc:{ru:$('dr').value.trim(),en:$('de').value.trim(),he:$('dh').value.trim()},
+    color:'#'+mat.color.getHexString(),z:$('bz').classList.contains('on'),s:$('bs').classList.contains('on'),
+    src:fileName,canon:canonC,geo:meta,thumb:makeThumb(),
+    ui:{off:[...UI.off].filter(k=>keys.has(k)),lab,rg:{}}
+  });
+  const cl=document.documentElement.cloneNode(true);
+  cl.querySelector('#embed').textContent=JSON.stringify(entry).replace(/</g,'\\u003c');
+  cl.querySelector('body').className='viewer';
+  cl.querySelector('#axes').innerHTML='';cl.querySelector('#msg').textContent='';cl.querySelector('#info').textContent='';
+  cl.querySelector('#over').className='';cl.querySelector('#drop').className='hide';
+  cl.querySelector('title').textContent=entry.name.ru+' — 3D модель';
+  const html='<!DOCTYPE html>\n'+cl.outerHTML;
+  download(base+'-3d.html',html);
+  $('msg').textContent='Готово: '+base+'-3d.html ('+Math.round(html.length/1024)+' КБ). Этот файл можно открыть отдельно или добавить на сайт через редактор.';
+};
+function size(){r.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener('resize',size);size();
+// режим просмотра: файл уже содержит модель
+try{const t=$('embed').textContent.trim();if(t){
+  const e=JSON.parse(t);
+  if(!e.geo)throw new Error('Файл создан старой версией конвертера');
+  viewer=true;document.body.classList.add('viewer');
+  const ub=b64dec(e.pos),ib=b64dec(e.idx);
+  const U=new Float32Array(ub.buffer,0,ub.byteLength/4);
+  const I=e.ib===4?new Uint32Array(ib.buffer,0,ib.byteLength/4):new Uint16Array(ib.buffer,0,ib.byteLength/2);
+  fileName=e.src||'';viewerName=e.name&&(e.name.ru||e.name.en||e.name.he)||fileName;
+  $('bz').classList.toggle('on',e.z);$('bs').classList.toggle('on',e.s);
+  mat.color.set(e.color);$('col').value=e.color;
+  setup({U,I,pos:expand(U,I),n:I.length/3},e.geo,[...geoOff(e)],e.ui&&e.ui.lab);
+}}catch(err){console.error(err)}
+(function loop(){requestAnimationFrame(loop);ctl.update();clip();r.render(sc,cam)})();
+</script>
+</body></html>
