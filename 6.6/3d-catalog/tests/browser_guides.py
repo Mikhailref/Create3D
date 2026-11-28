@@ -1,0 +1,146 @@
+# Редактор размеров: самостоятельные вспомогательные линии (привязка к модели и к линиям: концы, центр, трети,
+# четверти, метки; связи ∥ и ⟂; размеры от линий и на линиях, которые следуют за линией), толщина размерных линий,
+# палитра из 6 цветов при наведении на размер
+import pathlib,re,json,math
+exec(open(pathlib.Path(__file__).with_name('browser.py')).read().split('with sync_playwright() as p:')[0])
+with sync_playwright() as p:
+    b=p.chromium.launch();ctx=b.new_context(accept_downloads=True,viewport={'width':1500,'height':900});ctx.route('**/*',route);ctx.set_default_timeout(6000);errors=[]
+    def page(path):
+        g=ctx.new_page();g.on('pageerror',lambda e:errors.append(f'{path.name}: {e}'));g.on('dialog',lambda d:d.accept())
+        g.goto(path.as_uri());g.wait_for_timeout(1200);return g
+    near=lambda a,b,t=.05:abs(a-b)<=t
+    vnear=lambda a,b,t=.05:all(abs(x-y)<=t for x,y in zip(a,b))
+    e=page(OUT/'mesurments.html')
+    ok('редактор размеров открывается с пустого экрана',e.evaluate('()=>ASSIST.status().model')==False)
+    ok('внизу справа нет подсказки «FreeCAD 1.1: перетащите…»','FreeCAD 1.1:' not in e.inner_text('#side-panel'))
+    ok('кнопки «Загрузить пример» и названия «CAD Dimensioner» нет',e.locator('#btn-load-sample').count()==0 and 'CAD Dimensioner' not in e.inner_text('header'))
+    e.uncheck('#auto-dims-on-load',force=True)
+    e.set_input_files('#file-input',str(T/'box-freecad.html'));e.wait_for_timeout(1500)
+    G=lambda:e.evaluate('()=>ASSIST.guides()')
+    DI=lambda:e.evaluate('()=>ASSIST.dimsInfo()')
+    def click(pt,n=(0,0,1),hit=None):
+        e.evaluate('h=>ASSIST.click(h)',hit or {'point':list(pt),'normal':list(n)});e.wait_for_timeout(150)
+    def snap(pt,dx=2,dy=1):
+        x,y=e.evaluate('p=>ASSIST.screenOf(p)',list(pt))
+        return e.evaluate('([x,y])=>ASSIST.snapAt(x,y)',[x+dx,y+dy])
+    gcard=lambda gid:e.locator(f'#guides-list [data-guide-id="{gid}"]')
+
+    print('Инструмент и линия')
+    ok('на панели «Вспом. линия» (самостоятельная) и «Размер к линии» (прежний инструмент)','Вспом. линия' in e.inner_text('#tool-guide') and 'Размер к линии' in e.inner_text('#tool-aux'))
+    e.evaluate('()=>ASSIST.tool("guide")')
+    click((0,0,30));click((120,0,30))
+    g=G();ok('две точки — вспомогательная линия',len(g)==1 and vnear(g[0]['a'],[0,0,30]) and vnear(g[0]['b'],[120,0,30]) and near(g[0]['len'],120),g)
+    g1=g[0]['id']
+    ok('у линии своя карточка с длиной',gcard(g1).count()==1 and '120' in gcard(g1).locator('[data-g="len"]').input_value())
+    ok('линии — не размеры: в счётчике размеров их нет',e.evaluate('()=>ASSIST.status().dims')==0)
+
+    print('Привязка к линии')
+    for t,nm,pt in [(.5,'центр',[60,0,30]),(1/3,'треть',[40,0,30]),(.25,'четверть',[30,0,30]),(0,'конец',[0,0,30])]:
+        h=snap(pt);ok(f'привязка: {nm} линии',h and nm in h['snapType'].lower() and vnear(h['point'],pt,.01),h)
+    h=snap([70,0,30]);ok('привязка к любой точке на линии',h and vnear(h['point'],[70,0,30],1) and h.get('guideRef'),h)
+    gcard(g1).locator('[data-g="mark-in"]').fill('25');gcard(g1).locator('[data-g="mark-add"]').click();e.wait_for_timeout(200)
+    ok('метка на расстоянии 25 от начала',G()[0]['marks']==[25],G()[0]['marks'])
+    h=snap([25,0,30]);ok('привязка к метке',h and 'метка' in h['snapType'].lower() and vnear(h['point'],[25,0,30],.01),h)
+
+    print('Вторая линия и связи')
+    e.evaluate('()=>ASSIST.tool("guide")');click(None,hit=snap([60,0,30]));click((100,50,30))
+    g=G();g2=g[1]['id']
+    ok('вторая линия начинается из центра первой',vnear(g[1]['a'],[60,0,30]),g[1])
+    opts=gcard(g2).locator('[data-g="rel"] option').evaluate_all('l=>l.map(o=>o.value)')
+    ok('в карточке выбор связи: ∥ и ⟂ к другой линии',f'par:{g1}' in opts and f'perp:{g1}' in opts,opts)
+    gcard(g2).locator('[data-g="rel"]').select_option(f'perp:{g1}');e.wait_for_timeout(200);g=G()
+    L=math.hypot(40,50)
+    ok('⟂ — линия перпендикулярна первой, длина та же',vnear(g[1]['b'],[60,L,30],.05) and near(g[1]['len'],L),g[1])
+    gcard(g2).locator('[data-g="rel"]').select_option(f'par:{g1}');e.wait_for_timeout(200);g=G()
+    ok('∥ — параллельна первой',vnear(g[1]['b'],[60+L,0,30],.05),g[1])
+    print('Связи под углом')
+    opts=gcard(g2).locator('[data-g="rel"] option').evaluate_all('l=>l.map(o=>o.value)')
+    ok('есть «∠ под углом» и «✕ пересечение по центрам под углом»',f'ang:{g1}' in opts and f'cross:{g1}' in opts,opts)
+    ok('поле угла только у связей с углом',gcard(g2).locator('[data-g="ang"]').count()==0)
+    gcard(g2).locator('[data-g="rel"]').select_option(f'ang:{g1}');e.wait_for_timeout(200);g=G()
+    c45=math.cos(math.radians(45))
+    ok('∠ под углом: по умолчанию 45°, начало и длина те же',gcard(g2).locator('[data-g="ang"]').input_value()=='45' and vnear(g[1]['a'],[60,0,30]) and vnear(g[1]['b'],[60+L*c45,L*c45,30],.05),g[1])
+    gcard(g2).locator('[data-g="ang"]').fill('30');gcard(g2).locator('[data-g="ang"]').dispatch_event('change');e.wait_for_timeout(200);g=G()
+    ok('угол 30°',vnear(g[1]['b'],[60+L*math.cos(math.radians(30)),L*.5,30],.05),g[1])
+    gcard(g2).locator('[data-g="rel"]').select_option(f'cross:{g1}');e.wait_for_timeout(200)
+    gcard(g2).locator('[data-g="ang"]').fill('60');gcard(g2).locator('[data-g="ang"]').dispatch_event('change');e.wait_for_timeout(200);g=G()
+    mid=[(x+y)/2 for x,y in zip(g[1]['a'],g[1]['b'])];d=[y-x for x,y in zip(g[1]['a'],g[1]['b'])]
+    ang=math.degrees(math.acos(abs(d[0])/math.hypot(*d)))
+    ok('✕ пересечение: центр линии в центре первой, угол 60°, длина та же',vnear(mid,[60,0,30],.05) and near(ang,60,.1) and near(g[1]['len'],L),(mid,ang,g[1]['len']))
+    gcard(g2).locator('[data-g="rel"]').select_option(f'par:{g1}');e.wait_for_timeout(200)
+    o1=gcard(g1).locator('[data-g="rel"] option').evaluate_all('l=>l.map(o=>o.value)')
+    ok('первой нельзя связаться с линией, которая от неё зависит (без замкнутого круга)',not any(g2 in x for x in o1),o1)
+
+    g=G();ok('после смены связи на ∥ линия снова от центра первой',vnear(g[1]['a'],[60,0,30]),g[1])
+    print('Сворачивание')
+    gcard(g1).locator('[data-g="fold"]').click();e.wait_for_timeout(150)
+    ok('карточку линии можно свернуть',not gcard(g1).locator('[data-g="len"]').is_visible() and gcard(g1).locator('[data-g="name"]').is_visible())
+    gcard(g1).locator('[data-g="fold"]').click();e.wait_for_timeout(150)
+    ok('и развернуть',gcard(g1).locator('[data-g="len"]').is_visible())
+    e.click('#guides-fold');e.wait_for_timeout(150)
+    ok('весь блок линий сворачивается',not e.locator('#guides-list').is_visible() and e.locator('#guides-wrap').is_visible())
+    e.click('#guides-fold');e.wait_for_timeout(150)
+    ok('и разворачивается',e.locator('#guides-list').is_visible())
+    print('Повторный клик по инструменту')
+    e.click('#tool-measure');ok('инструмент выбран',e.evaluate('()=>ASSIST.status().tool')=='measure')
+    e.click('#tool-measure');ok('ещё клик по нему — снова обзор',e.evaluate('()=>ASSIST.status().tool')=='orbit')
+
+    print('Размеры от линий')
+    e.evaluate('()=>ASSIST.tool("measure")');click(None,hit=snap([0,0,30]));click(None,hit=snap([25,0,30]))
+    e.evaluate('()=>ASSIST.tool("measure")');click(None,hit=snap([0,0,30]));click(None,hit=snap([60,0,30]))
+    d=DI();ok('размер от конца линии до метки 25 и до центра 60',len(d)==2 and near(d[0]['value'],25) and near(d[1]['value'],60),d)
+    gcard(g1).locator('[data-g="len"]').fill('100');gcard(g1).locator('[data-g="len"]').dispatch_event('change');e.wait_for_timeout(250)
+    g=G();d=DI()
+    ok('длина первой линии 100',near(g[0]['len'],100) and vnear(g[0]['b'],[100,0,30]),g[0])
+    ok('вторая линия едет за центром первой и остаётся параллельной',vnear(g[1]['a'],[50,0,30]) and vnear(g[1]['b'],[50+L,0,30],.05),g[1])
+    ok('размер до центра следует за линией (50), до метки — остаётся 25',near(d[1]['value'],50) and near(d[0]['value'],25),[x['value'] for x in d])
+
+    print('Удаление и сохранение')
+    with e.expect_download() as dl:e.locator('#btn-export-html').evaluate('el=>el.click()')
+    prj=T/'guides-project.html';dl.value.save_as(prj)
+    data=json.loads(re.search(r'id="__CAD_ANNOTATIONS_DATA__"[^>]*>(.*?)</script>',prj.read_text(),re.S).group(1))
+    ok('линии сохраняются в проекте отдельно от размеров',len(data.get('guides',[]))==2 and len(data['annotations'])==2,(len(data.get('guides',[])),len(data['annotations'])))
+    e2=page(OUT/'mesurments.html');e2.set_input_files('#file-input',str(prj));e2.wait_for_timeout(1500)
+    g=e2.evaluate('()=>ASSIST.guides()')
+    ok('при открытии линии, связи и метки на месте',len(g)==2 and g[1]['rel']=={'kind':'par','ref':g1} and g[0]['marks']==[25],g)
+    e2.evaluate('()=>{}')
+    gc2=lambda gid:e2.locator(f'#guides-list [data-guide-id="{gid}"]')
+    gc2(g1).locator('[data-g="len"]').fill('80');gc2(g1).locator('[data-g="len"]').dispatch_event('change');e2.wait_for_timeout(250)
+    ok('и связи после открытия работают: размер до центра 40',near(e2.evaluate('()=>ASSIST.dimsInfo()')[1]['value'],40))
+    gcard(g1).locator('[data-g="del"]').click();e.wait_for_timeout(250);g=G()
+    ok('удалить линию: вторая осталась на месте, без связи',len(g)==1 and g[0]['rel'] is None and vnear(g[0]['a'],[50,0,30]),g)
+    # тот же проект без линий и привязок к ним — конвертер должен дать то же самое
+    h0=prj.read_text();d0=json.loads(re.search(r'id="__CAD_ANNOTATIONS_DATA__"[^>]*>(.*?)</script>',h0,re.S).group(1))
+    d0.pop('guides',None);[a.pop('refs',None) for a in d0['annotations']]
+    plain=T/'guides-plain.html';plain.write_text(h0.replace(re.search(r'id="__CAD_ANNOTATIONS_DATA__"[^>]*>(.*?)</script>',h0,re.S).group(1),json.dumps(d0,ensure_ascii=False)))
+    CV='()=>({p:plist().map(p=>p.key),m:document.getElementById("msg").textContent})'
+    c=page(OUT/'Конвертер-OBJ-HTML.html');c.set_input_files('#f',str(prj));c.wait_for_timeout(2000);r1=c.evaluate(CV)
+    c.set_input_files('#f',str(plain));c.wait_for_timeout(2000);r2=c.evaluate(CV)
+    ok('конвертер: линии ничего не меняют — результат как у проекта без них',r1==r2,(r1,r2))
+
+    print('Толщина размерных линий')
+    ok('настройка «Толщина размерных линий»',e.locator('#line-k').count()==1 and e.locator('#line-k').input_value()=='1')
+    w1=DI()[0]['lineW']
+    e.locator('#line-k').select_option('2');e.wait_for_timeout(250);w2=DI()[0]['lineW']
+    ok('×2 — все линии размеров вдвое толще',w1 and w2 and all(near(b_,2*a_) for a_,b_ in zip(w1,w2)),(w1,w2))
+    with e.expect_download() as dl:e.locator('#btn-export-html').evaluate('el=>el.click()')
+    f=T/'guides-k.html';dl.value.save_as(f)
+    e3=page(OUT/'mesurments.html');e3.set_input_files('#file-input',str(f));e3.wait_for_timeout(1500)
+    ok('толщина сохраняется в проекте',e3.locator('#line-k').input_value()=='2' and near(e3.evaluate('()=>ASSIST.dimsInfo()')[0]['lineW'][0],w2[0]))
+
+    print('Палитра при наведении на размер')
+    e.locator('#dimensions-list > [data-card-id] [data-action="name"]').first.evaluate('i=>{i.value="Ширина паза";i.dispatchEvent(new Event("input",{bubbles:true}));i.dispatchEvent(new Event("change",{bubbles:true}))}');e.wait_for_timeout(200)
+    e.evaluate('()=>document.querySelectorAll(".dim-badge")[0].scrollIntoView({block:"center",inline:"center"})')
+    bb=e.locator('.dim-badge').first.bounding_box()
+    e.mouse.move(bb['x']+bb['width']/2,bb['y']+bb['height']/2);e.wait_for_timeout(300)
+    pal=e.locator('.dim-pal')
+    ok('при наведении на размер — палитра из 6 цветов',pal.is_visible() and pal.locator('.dim-pal-c').count()==6)
+    ok('и вместе с палитрой — название размера',pal.locator('.dim-pal-n').inner_text().strip()=='Ширина паза',pal.locator('.dim-pal-n').inner_text())
+    col=pal.locator('.dim-pal-c').nth(3).get_attribute('data-color')
+    pal.locator('.dim-pal-c').nth(3).click();e.wait_for_timeout(250)
+    ok('клик по кружку меняет цвет размера',DI()[0]['color']==col,(DI()[0]['color'],col))
+    e.mouse.move(5,5);e.wait_for_timeout(700)
+    ok('мышь ушла — палитра скрылась',not pal.is_visible())
+    ok('ошибок на страницах нет',not errors,errors[:3])
+    b.close()
+print(f'\nИтого: пройдено {ok_n}, ошибок {bad_n}');sys.exit(1 if bad_n else 0)
