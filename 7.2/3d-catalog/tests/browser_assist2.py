@@ -1,0 +1,133 @@
+# Ассистент: вопрос «сколько основных размеров» на сложной детали; свободный переход между шагами с сохранением
+# в фоне; при возврате из конвертера — вопрос «сохранить?»; пронумерованный буфер версий: скачать и открыть
+import pathlib,re,json
+exec(open(pathlib.Path(__file__).with_name('browser.py')).read().split('with sync_playwright() as p:')[0])
+with sync_playwright() as p:
+    b=p.chromium.launch();ctx=b.new_context(accept_downloads=True,viewport={'width':1500,'height':950});ctx.route('**/*',route);ctx.set_default_timeout(8000);errors=[]
+    def page(path):
+        g=ctx.new_page();g.on('pageerror',lambda e:errors.append(f'{path.name}: {e}'));g.on('dialog',lambda d:d.accept())
+        g.goto(path.as_uri());return g
+    def wait(cond,ms=15000,step=200):
+        t=0
+        while t<ms:
+            try:
+                if cond():return True
+            except Exception:pass
+            A.wait_for_timeout(step);t+=step
+        return False
+    mes=lambda:A.query_selector('#fMes').content_frame()
+    conv=lambda:A.query_selector('#fConv').content_frame()
+    MS=lambda:mes().evaluate('()=>ASSIST.status()')
+    CS=lambda:conv().evaluate('()=>ASSIST.status()')
+    def assistant():
+        global A
+        A=page(OUT/'Ассистент.html');wait(lambda:MS() is not None and CS() is not None);return A
+    def busy_done():A.wait_for_function('()=>!document.body.classList.contains("busy")',timeout=30000)
+    step=lambda:A.evaluate('()=>document.body.dataset.step')
+    asking=lambda:A.locator('#aAsk').is_visible()
+    def open_file(f):A.set_input_files('#aFile',str(f));busy_done()
+    def buf():return A.evaluate('()=>[...document.querySelectorAll("#aBuf [data-entry]")].map(e=>e.dataset.entry)')
+    groups=lambda:sum(1 for x in CS()['params'] if x.get('g'))
+
+    print('Сложная деталь')
+    assistant();open_file(T/'complex-freecad.html')
+    n=mes().evaluate('()=>ASSIST.plan().count')
+    ok('у детали с сеткой карманов больше 15 возможных размеров',n>15,n)
+    A.click('#aAuto');A.wait_for_timeout(300)
+    ok('ассистент спрашивает, сколько основных размеров сделать',asking() and str(n) in A.inner_text('#aAsk') and A.locator('#aAskN').is_visible(),A.inner_text('#aAsk') if asking() else '')
+    A.fill('#aAskN','8');A.click('#aAskOk');busy_done();s=MS()
+    ok('поставлено ровно 8 размеров',s['dims']==8,s['dims'])
+    ok('первыми идут габариты',all(x in s['names'] for x in ['Ширина','Длина','Высота']),s['names'])
+    ok('дальше — карманы, а не стенки',sum('карман' in x for x in s['names'])==5 and not any('стенк' in x for x in s['names']),s['names'])
+    ok('в отчёте видно, сколько поставлено из скольких',re.search(rf'основных размеров: 8 из {n}',A.inner_text('#aMsg')),A.inner_text('#aMsg'))
+    A.click('#aUndo');busy_done();A.click('#aAuto');A.wait_for_timeout(300);A.click('#aAskCancel');A.wait_for_timeout(300)
+    ok('«Отмена» — ничего не ставится',not asking() and MS()['dims']==0,MS()['dims'])
+    A.click('#aAuto');A.wait_for_timeout(300);A.click('#aAskAll');busy_done()
+    ok('«Все» — ставит все возможные размеры',MS()['dims']==n,(MS()['dims'],n))
+    A.close()
+    assistant();open_file(T/'box-freecad.html');A.click('#aAuto');busy_done()
+    ok('простая деталь (13 размеров) — без вопроса',not asking() and MS()['dims']==13)
+
+    print('Переход к конвертеру без «Одобрить»')
+    mes().locator('#dimensions-list > [data-card-id] [data-action="delete"]').first.evaluate('e=>e.click()');A.wait_for_timeout(300)
+    ok('ручная правка: 12 размеров',MS()['dims']==12)
+    ok('вкладка «2 · Ползунки» доступна, как только есть модель',not A.locator('#aStep2').is_disabled())
+    A.click('#aStep2');busy_done()
+    ok('вкладка переносит текущий файл в конвертер',step()=='2' and CS()['dims']==12,CS()['dims'])
+    ok('и сохраняет его в буфер как «Размеры №1»',buf()==['Размеры №1'],buf())
+    A.click('#aAuto');busy_done();g0=groups()
+    print('Обратно к размерам')
+    A.click('#aStep1');A.wait_for_timeout(300)
+    ok('конвертер изменён — ассистент спрашивает, сохранить ли его файл',asking() and 'конвертер' in A.inner_text('#aAsk').lower())
+    A.click('#aAskCancel');A.wait_for_timeout(200)
+    ok('«Отмена» — остаёмся в конвертере',not asking() and step()=='2')
+    A.click('#aStep1');A.wait_for_timeout(300);A.click('#aAskSave');busy_done()
+    ok('«Сохранить» — версия конвертера в буфере, открыт шаг 1',step()=='1' and buf()==['Размеры №1','Ползунки №1'],buf())
+    A.click('#aStep2');busy_done()
+    ok('размеры не менялись — конвертер не пересобирается, настройки на месте',groups()==g0 and g0>0 and buf()==['Размеры №1','Ползунки №1'],(groups(),buf()))
+    A.click('#aStep1');A.wait_for_timeout(300)
+    ok('в конвертере ничего не меняли — без вопроса',not asking() and step()=='1')
+    mes().locator('#dimensions-list > [data-card-id] [data-action="delete"]').first.evaluate('e=>e.click()');A.wait_for_timeout(300)
+    A.click('#aStep2');busy_done()
+    ok('размеры изменились — вкладка переносит новый файл',CS()['dims']==11 and groups()==0,CS()['dims'])
+    ok('в буфере «Размеры №2»',buf()==['Размеры №1','Ползунки №1','Размеры №2'],buf())
+    A.click('#aStep1');A.wait_for_timeout(300)
+    ok('после переноса без правок в конвертере — без вопроса',not asking() and step()=='1')
+
+    print('Буфер')
+    ok('на кнопке буфера число версий',re.search(r'\(3\)',A.inner_text('#aBufBtn')),A.inner_text('#aBufBtn'))
+    A.click('#aBufBtn');ok('список буфера открывается',A.locator('#aBuf').is_visible())
+    t=A.inner_text('#aBuf');ok('у версий видно время и число размеров',re.search(r'\d\d:\d\d',t) and '12 разм.' in t and '11 разм.' in t,t)
+    with A.expect_download() as d:A.locator('#aBuf [data-entry="Размеры №1"] [data-dl]').click()
+    f=T/'buf-r1.html';d.value.save_as(f)
+    ann=json.loads(re.search(r'id="__CAD_ANNOTATIONS_DATA__"[^>]*>(.*?)</script>',f.read_text(),re.S).group(1))['annotations']
+    ok('версию можно скачать: «Размеры №1» — 12 размеров',len(ann)==12 and d.value.suggested_filename.endswith('.html'),(len(ann),d.value.suggested_filename))
+    A.locator('#aBuf [data-entry="Ползунки №1"] [data-open]').click();busy_done()
+    ok('«Ползунки №1» открывается в конвертере с настройками',step()=='2' and CS()['dims']==12 and groups()==g0,(step(),CS()['dims'],groups()))
+    A.click('#aStep1');A.wait_for_timeout(300)
+    ok('открытая из буфера версия без правок — без вопроса',not asking())
+    if asking():A.click('#aAskNo');busy_done()
+    if not A.locator('#aBuf').is_visible():A.click('#aBufBtn')
+    A.locator('#aBuf [data-entry="Размеры №1"] [data-open]').click();busy_done()
+    ok('«Размеры №1» открывается в редакторе размеров',step()=='1' and MS()['dims']==12,MS()['dims'])
+    A.click('#aKeep');busy_done()
+    ok('«💾 В буфер» сохраняет текущий шаг: «Размеры №3»',buf()[-1]=='Размеры №3',buf())
+    print('Удаление из буфера')
+    if not A.locator('#aBuf').is_visible():A.click('#aBufBtn')
+    A.locator('#aBuf [data-entry="Размеры №2"] [data-del]').click();A.wait_for_timeout(200)
+    ok('удаление спрашивает подтверждение',asking() and 'Размеры №2' in A.inner_text('#aAsk'))
+    A.click('#aAskCancel');A.wait_for_timeout(200)
+    ok('«Отмена» — версия на месте','Размеры №2' in buf(),buf())
+    if not A.locator('#aBuf').is_visible():A.click('#aBufBtn')
+    A.locator('#aBuf [data-entry="Размеры №2"] [data-del]').click();A.wait_for_timeout(200);A.click('#aAskDel');A.wait_for_timeout(200)
+    ok('версия удалена, у остальных номера прежние',buf()==['Размеры №1','Ползунки №1','Размеры №3'],buf())
+    ok('на кнопке буфера новое число',re.search(r'\(3\)',A.inner_text('#aBufBtn')),A.inner_text('#aBufBtn'))
+    nb0=len(buf());A.click('#aKeep');busy_done()
+    ok('«💾 В буфер» без изменений не повторяет версию',len(buf())==nb0,buf())
+    mes().locator('#dimensions-list > [data-card-id] [data-action="delete"]').nth(2).evaluate('e=>e.click()');A.wait_for_timeout(300)
+    A.click('#aKeep');busy_done()
+    ok('новые версии продолжают нумерацию: «Размеры №4»',buf()[-1]=='Размеры №4',buf())
+    print('Сбой конвертера при переносе')
+    ok('состояние конвертера читается, даже если внутри что-то сломано',conv().evaluate('()=>{const o=window.plist;window.plist=()=>{throw new Error("x")};const r=ASSIST.status();window.plist=o;return !!r}'))
+    nb=len(buf())
+    conv().evaluate('()=>{window.load=()=>{throw new Error("сбой для проверки")}}')
+    if step()=='2':
+        A.click('#aStep1');A.wait_for_timeout(300)
+        if asking():A.click('#aAskNo')
+        busy_done()
+    n0=MS()['dims']
+    mes().locator('#dimensions-list > [data-card-id] [data-action="delete"]').nth(4).evaluate('e=>e.click()');A.wait_for_timeout(300)
+    A.click('#aStep2');busy_done()
+    ok('конвертер не открыл файл — ассистент перезапустил его и перенёс файл',step()=='2' and CS()['dims']==n0-1 and 'перезапущен' in A.inner_text('#aMsg'),(step(),A.inner_text('#aMsg')[:200]))
+    ok('в буфер добавлена одна версия, без повторов',len(buf())==nb+1,buf())
+    A.click('#aStep1');A.wait_for_timeout(300)
+    if asking():A.click('#aAskNo')
+    busy_done();A.click('#aStep2');busy_done()
+    ok('размеры не менялись — без новой версии в буфере',len(buf())==nb+1 and step()=='2',buf())
+    A.click('#aStep1');A.wait_for_timeout(300)
+    if asking():A.click('#aAskNo')
+    busy_done()
+
+    ok('ошибок на страницах нет',not errors,errors[:3])
+    b.close()
+print(f'\nИтого: пройдено {ok_n}, ошибок {bad_n}');sys.exit(1 if bad_n else 0)

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ассистент 3D-модели</title>
+<style>
+:root{--bg:#0b1120;--bar:#111827;--fg:#e5e7eb;--mut:#94a3b8;--bd:#334155;--ac:#f59e0b;--ok:#16a34a;--soft:#1e293b}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px/1.35 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+body{display:flex;flex-direction:column}
+.bar{position:relative;display:flex;align-items:center;gap:6px;padding:8px 10px;background:var(--bar);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;margin-right:4px;white-space:nowrap}
+.steps{display:flex;align-items:center;gap:6px;margin-right:8px}
+.steps span{color:var(--mut)}
+button,.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border-radius:8px;border:1px solid var(--bd);background:var(--soft);color:var(--fg);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+button:hover:not(:disabled),.btn:hover{border-color:#64748b}
+button:disabled{opacity:.4;cursor:default}
+.step{border-radius:999px}
+.step.on{background:var(--ac);border-color:var(--ac);color:#111;font-weight:700}
+.pri{background:var(--ac);border-color:var(--ac);color:#111;font-weight:700}
+.go{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:700}
+.sp{flex:1}
+.msg{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:6;width:min(720px,calc(100% - 24px));padding:9px 34px 9px 14px;background:rgba(15,23,42,.96);border:1px solid var(--bd);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.45);font-size:13px;color:#cbd5e1;white-space:pre-line;max-height:40vh;overflow:auto}
+.msg[hidden]{display:none!important}
+#aMsgX{position:absolute;top:6px;right:6px;height:24px;width:24px;padding:0;justify-content:center;border-radius:6px;font-size:12px}
+.msg b{color:#fff}
+.msg .bad{color:#f87171}.msg .good{color:#4ade80}
+.frames{flex:1;position:relative;min-height:0}
+.frames iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:none;background:#fff}
+body[data-step="1"] #fMes,body[data-step="2"] #fConv{display:block}
+body.busy,body.busy *{cursor:progress!important}
+.wait{display:none;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:5;background:var(--ac);color:#111;font-weight:700;padding:6px 14px;border-radius:999px;font-size:13px}
+body.busy .wait{display:block}
+/* буфер версий */
+.buf{position:absolute;right:12px;top:calc(100% + 6px);z-index:20;width:min(460px,94vw);max-height:60vh;overflow:auto;background:var(--bar);border:1px solid var(--bd);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.45);padding:10px}
+.buf h3{margin:0 0 6px;font-size:13px;color:var(--mut);font-weight:600}
+.buf .empty{color:var(--mut);font-size:13px;padding:6px 2px}
+.bi{display:flex;align-items:center;gap:8px;padding:7px 6px;border-top:1px solid var(--bd)}
+.bi:first-of-type{border-top:0}
+.bi .tg{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:#334155;white-space:nowrap}
+.bi .tg.mes{background:#0e7490}.bi .tg.conv{background:#7c3aed}
+.bi .nm{flex:1;min-width:0;font-size:12px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bi .nm b{color:var(--fg);font-weight:600}
+.bi button{height:28px;padding:0 9px;font-size:12px}
+.buf .hint{font-size:11px;color:var(--mut);margin-top:6px}
+/* вопрос ассистента */
+.ask{position:fixed;inset:0;z-index:50;background:rgba(2,6,23,.6);display:flex;align-items:center;justify-content:center}
+.ask .box{width:min(460px,92vw);background:var(--bar);border:1px solid var(--bd);border-radius:14px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.ask .t{white-space:pre-line;font-size:14px;line-height:1.45;margin-bottom:12px}
+.ask .t b{color:#fff}
+.ask input{width:110px;height:34px;border-radius:8px;border:1px solid var(--bd);background:#0f172a;color:var(--fg);font:inherit;font-size:15px;padding:0 10px;margin-bottom:12px}
+.ask .box:has(.ask-names){width:min(560px,94vw)}
+.ask-names{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto;margin:8px 0 2px;white-space:normal}
+.ask-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px;align-items:center;font-size:13px}
+.ask-row .was{color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ask .ask-row input.ask-name{width:100%;margin:0;height:32px;font-size:14px}
+.ask .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+</style>
+</head>
+<body data-step="1">
+<div class="bar">
+  <span class="brand">🪄 Ассистент 3D-модели</span>
+  <div class="steps">
+    <button id="aStep1" class="step on" type="button" title="Редактор размеров">1 · Размеры</button><span>→</span>
+    <button id="aStep2" class="step" type="button" title="Конвертер: ползунки. Текущий файл размеров переносится сам" disabled>2 · Ползунки</button>
+  </div>
+  <label class="btn" title="Экспорт FreeCAD (HTML), OBJ, STL, GLB — или файл с размерами, или готовая модель">📂 Открыть файл<input id="aFile" type="file" accept=".html,.htm,.obj,.stl,.glb,.gltf" hidden></label>
+  <button id="aAuto" class="pri" type="button" disabled>🪄 Автоматизировать</button>
+  <button id="aUndo" type="button" disabled title="Вернуть то, что было до последней автоматизации на этом шаге">↶ Отменить</button>
+  <button id="aSave" type="button" disabled title="Скачать файл этого шага: на шаге 1 — файл с размерами, на шаге 2 — готовую модель для редактора сайта">⬇ Скачать</button>
+  <button id="aKeep" type="button" disabled title="Сохранить текущее состояние этого шага в буфер версий">💾 В буфер</button>
+  <button id="aBufBtn" type="button" title="Сохранённые версии обоих шагов">📚 Буфер (0)</button>
+  <div class="buf" id="aBuf" hidden></div>
+</div>
+<div class="frames">
+  <div class="msg" id="aMsg"><button type="button" id="aMsgX" title="Закрыть">✕</button><div id="aMsgT">Откройте модель: экспорт FreeCAD (HTML), OBJ или STL — ассистент начнёт с простановки размеров. Файл с размерами откроется на шаге 1, готовая модель (-3d.html) — сразу на шаге 2.</div></div>
+  <div class="wait">Ассистент работает…</div>
+  <iframe id="fMes" title="Редактор размеров"></iframe>
+  <iframe id="fConv" title="Конвертер"></iframe>
+</div>
+<div class="ask" id="aAsk" hidden><div class="box"><div class="t" id="aAskText"></div><input id="aAskN" type="number" min="1" step="1" hidden><div class="acts" id="aAskActs"></div></div></div>
+<script type="application/json" id="app-mes"><<<out:mesurments.html>>></script>
+<script type="application/json" id="app-conv"><<<out:Конвертер-OBJ-HTML.html>>></script>
+<script>
+// Внутри — ваши программы: шаг 1 — редактор размеров, шаг 2 — конвертер.
+// Ассистент открывает файлы, переносит файл размеров в конвертер (сохраняя его в буфер), запускает автоматику,
+// хранит отмену и пронумерованные версии обоих шагов.
+const $=id=>document.getElementById(id);
+const F={1:$('fMes'),2:$('fConv')};
+const API=n=>{try{return F[n].contentWindow.ASSIST||null}catch(e){return null}};
+const undo={1:[],2:[]};
+const BUF=[],CNT={mes:0,conv:0},KIND={mes:'Размеры',conv:'Ползунки'};
+let step=1,lastSent=null,convSig=null;
+const COMPLEX=15; // больше стольких размеров — деталь сложная, ассистент спрашивает, сколько основных поставить
+F[1].srcdoc=JSON.parse($('app-mes').textContent);
+F[2].srcdoc=JSON.parse($('app-conv').textContent);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(f,ms=60000){const t=Date.now();while(Date.now()-t<ms){try{if(f())return true}catch(e){}await sleep(120)}return false}
+const st=n=>{const a=API(n);try{return a?a.status():null}catch(e){return null}};
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// сообщение всплывает поверх окна программы; обычное само скрывается, ошибка — остаётся до закрытия ✕
+let sayT=0;
+function say(html){
+  $('aMsgT').innerHTML=html;$('aMsg').hidden=false;clearTimeout(sayT);
+  if(html.indexOf('class="bad"')<0)sayT=setTimeout(()=>{$('aMsg').hidden=true},12000);
+}
+$('aMsgX').onclick=()=>{clearTimeout(sayT);$('aMsg').hidden=true};
+function busy(on){document.body.classList.toggle('busy',on);update()}
+function setStep(n){step=n;document.body.dataset.step=n;$('aStep1').classList.toggle('on',n===1);$('aStep2').classList.toggle('on',n===2);update()}
+function update(){
+  const b=document.body.classList.contains('busy'),s1=st(1),s2=st(2),cur=step===1?s1:s2;
+  $('aAuto').disabled=b||!(cur&&cur.model);
+  $('aUndo').disabled=b||!undo[step].length;
+  $('aSave').disabled=$('aKeep').disabled=b||!(cur&&cur.model);
+  $('aStep1').disabled=b;$('aStep2').disabled=b||!((s1&&s1.model)||(s2&&s2.model));
+}
+setInterval(update,700);
+
+// ---------- вопрос ассистента (окно с кнопками, при необходимости — поле для числа) ----------
+function ask(text,buttons,num){
+  return new Promise(res=>{
+    $('aAskText').innerHTML=text;
+    const n=$('aAskN');n.hidden=!num;if(num){n.value=num.def;n.max=num.max}
+    const acts=$('aAskActs');acts.innerHTML='';
+    buttons.forEach(([id,label,cls,val])=>{const b=document.createElement('button');b.type='button';b.id=id;b.textContent=label;if(cls)b.className=cls;
+      b.onclick=()=>{$('aAsk').hidden=true;res({v:val,n:Math.round(+n.value)})};acts.appendChild(b)});
+    $('aAsk').hidden=false;if(num)setTimeout(()=>{n.focus();n.select()},30);
+  });
+}
+$('aAskN').addEventListener('keydown',e=>{if(e.key==='Enter'){const b=$('aAskOk');if(b)b.click()}});
+
+// ---------- загрузка в программы ----------
+async function loadInto(n,file){
+  if(n===1){await Promise.race([API(1).loadFile(file),sleep(60000)]);return {ok:true}}
+  return convLoad(file);
+}
+// загрузить файл в конвертер; если не вышло — перезапустить конвертер и попробовать ещё раз
+async function convLoad(file){
+  const once=async()=>{
+    const a=API(2),s=st(2),s0=s?s.seq:0,e0=a.errors.length;
+    a.loadFile(file);
+    await until(()=>{const x=st(2);return (x&&x.seq>s0&&x.model)||API(2).errors.length>e0},30000);
+    const x=st(2);
+    if(x&&x.seq>s0&&x.model)return {ok:true};
+    return {ok:false,err:API(2).errors.slice(e0).join('; ')||(x&&x.error)||'конвертер не ответил за 30 секунд'};
+  };
+  let r=await once();
+  if(!r.ok){
+    const old=API(2);
+    F[2].srcdoc=JSON.parse($('app-conv').textContent);
+    await until(()=>{const a=API(2);return a&&a!==old&&st(2)},30000);
+    const r2=await once();
+    r=r2.ok?{ok:true,restarted:true}:{ok:false,err:r2.err||r.err,restarted:true};
+  }
+  if(r.ok)convSig=API(2).sig();
+  return r;
+}
+const convFail=(r,what)=>'<span class="bad">Конвертер не смог открыть '+what+': '+esc(r.err)+'.</span>\nЕсли повторится — скачайте файл из буфера ⬇ и пришлите его вместе с этим текстом.';
+const asFile=p=>new File([p.html],p.name,{type:'text/html'});
+
+// ---------- буфер версий ----------
+function keep(kind,p,dims){
+  const last=[...BUF].reverse().find(e=>e.kind===kind);
+  if(last&&last.html===p.html)return last; // та же версия уже есть — не повторяем
+  CNT[kind]++;
+  const d=new Date(),tm=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+  const e={kind,n:CNT[kind],label:KIND[kind]+' №'+CNT[kind],name:p.name,html:p.html,dims,time:tm};
+  BUF.push(e);renderBuf();return e;
+}
+function renderBuf(){
+  $('aBufBtn').textContent='📚 Буфер ('+BUF.length+')';
+  const box=$('aBuf');
+  box.innerHTML='<h3>Сохранённые версии</h3>'+(BUF.length?'':'<div class="empty">Пока пусто. Версии появляются при переходе между шагами и по кнопке «💾 В буфер».</div>');
+  BUF.forEach((e,i)=>{
+    const r=document.createElement('div');r.className='bi';r.dataset.entry=e.label;
+    r.innerHTML='<span class="tg '+e.kind+'">'+esc(e.label)+'</span><span class="nm"><b>'+e.time+'</b> · '+e.dims+' разм. · '+esc(e.name)+'</span>'+
+      '<button type="button" data-open title="Открыть эту версию в '+(e.kind==='mes'?'редакторе размеров':'конвертере')+'">Открыть</button><button type="button" data-dl title="Скачать файл этой версии">⬇</button><button type="button" data-del title="Удалить эту версию из буфера">🗑</button>';
+    r.querySelector('[data-open]').onclick=()=>openBuf(i);
+    r.querySelector('[data-dl]').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([e.html],{type:'text/html;charset=utf-8'}));a.download=e.name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500)};
+    r.querySelector('[data-del]').onclick=()=>delBuf(e);
+    box.appendChild(r);
+  });
+  if(BUF.length)box.insertAdjacentHTML('beforeend','<div class="hint">Буфер живёт, пока открыт ассистент. Нужную версию скачайте ⬇.</div>');
+}
+// удалить версию из буфера (номера остальных не меняются, новые продолжают нумерацию)
+async function delBuf(e){
+  const r=await ask('<b>Удалить «'+esc(e.label)+'» из буфера?</b>\n'+e.time+' · '+e.dims+' разм. · '+esc(e.name)+'\nЕсли файл нужен, сначала скачайте его ⬇.',[['aAskCancel','Отмена','',0],['aAskDel','🗑 Удалить','pri',1]]);
+  if(!r.v)return;
+  const i=BUF.indexOf(e);if(i>=0)BUF.splice(i,1);
+  renderBuf();$('aBuf').hidden=false;
+}
+$('aBufBtn').onclick=()=>{$('aBuf').hidden=!$('aBuf').hidden};
+async function openBuf(i){
+  const e=BUF[i];$('aBuf').hidden=true;
+  if(e.kind==='conv'&&step===2&&!(await leaveConv()))return;
+  busy(true);
+  try{
+    if(e.kind==='mes'){await loadInto(1,asFile(e));undo[1]=[];setStep(1)}
+    else{const r=await loadInto(2,asFile(e));if(!r.ok){say(convFail(r,'версию «'+esc(e.label)+'»'));return}undo[2]=[];setStep(2)}
+    say('<b>Открыта версия «'+esc(e.label)+'»</b> ('+e.time+', '+e.dims+' разм.).');
+  }finally{busy(false)}
+}
+$('aKeep').onclick=()=>{
+  if(step===1){const p=API(1).project();if(p)keep('mes',p,st(1).dims)}
+  else{const p=API(2).model();if(p){keep('conv',p,st(2).dims);convSig=API(2).sig()}}
+  const last=BUF.filter(e=>e.kind===(step===1?'mes':'conv')).pop();
+  if(last)say('<b>В буфере:</b> «'+esc(last.label)+'».');
+};
+
+// ---------- переходы между шагами ----------
+// к ползункам: текущий файл размеров сохраняется в буфер и переносится в конвертер (если он менялся с прошлого переноса)
+async function goTo2(){
+  const s1=st(1),s2=st(2);
+  if(!(s1&&s1.model)){if(s2&&s2.model)setStep(2);return}
+  const p=API(1).project();if(!p)return;
+  if(p.html===lastSent&&s2&&s2.model){setStep(2);return}
+  busy(true);
+  try{
+    const ke=keep('mes',p,s1.dims);
+    const r=await loadInto(2,asFile(p));
+    if(!r.ok){say(convFail(r,'файл размеров')+' Файл размеров сохранён в буфере как «'+esc(ke.label)+'»; шаг 1 остаётся открытым.');return}
+    lastSent=p.html;undo[2]=[];setStep(2);
+    const s2n=st(2);
+    say('<b>Шаг 2 — ползунки.</b>'+(r.restarted?' Конвертер был перезапущен после сбоя и открыл файл.':'')+' Файл размеров перенесён в конвертер ('+(s2n?s2n.dims:'?')+' разм.) и сохранён в буфер как «'+esc(ke.label)+'».\nНажмите «🪄 Автоматизировать» — ассистент объединит одинаковые элементы в группы, поставит замки на стенки, задаст пределы и проверит ползунки. Или настройте вручную.');
+  }finally{busy(false)}
+}
+// из конвертера: если в нём есть несохранённые изменения — спросить, сохранить ли его файл в буфер
+async function leaveConv(){
+  const s2=st(2);
+  if(!(s2&&s2.model)||API(2).sig()===convSig)return true;
+  const r=await ask('<b>В конвертере есть изменения.</b>\nСохранить файл конвертера в буфер, прежде чем уйти?',[['aAskCancel','Отмена','',0],['aAskNo','Не сохранять','',1],['aAskSave','💾 Сохранить в буфер','pri',2]]);
+  if(!r.v)return false;
+  if(r.v===2){busy(true);try{keep('conv',API(2).model(),s2.dims);convSig=API(2).sig()}finally{busy(false)}}
+  else convSig=API(2).sig(); // «Не сохранять»: больше не спрашиваем про эти же изменения
+  return true;
+}
+async function goTo1(){
+  if(step===1)return;const n=BUF.length;
+  if(!(await leaveConv()))return;
+  setStep(1);
+  say('<b>Шаг 1 — размеры.</b>'+(BUF.length>n?' Файл конвертера сохранён в буфер как «'+esc(BUF[BUF.length-1].label)+'».':'')+'\nПравьте размеры; при переходе к ползункам изменённый файл перенесётся в конвертер сам.');
+}
+$('aStep2').onclick=()=>{if(step!==2)goTo2()};
+$('aStep1').onclick=goTo1;
+
+// ---------- открыть файл ----------
+const DIM_HINT='Проверьте размеры и названия справа в редакторе: любой можно удалить, добавить или переименовать вручную. Когда всё верно — вкладка «2 · Ползунки».';
+async function openFile(f){
+  busy(true);
+  try{
+    let kind='raw';
+    if(/\.html?$/i.test(f.name)){
+      const t=await f.text();
+      // готовая модель конвертера (в её коде тоже есть слово-метка проекта, поэтому проверяем её первой)
+      if(/<script id="embed" type="application\/json">\s*\{/.test(t))kind='model';
+      else if(/<script id="__CAD_ANNOTATIONS_DATA__"/.test(t))kind='project';
+    }
+    if(kind==='model'){
+      busy(false);if(step===2&&!(await leaveConv()))return;busy(true);
+      const r=await loadInto(2,f);if(!r.ok){say(convFail(r,'«'+esc(f.name)+'»'));return}
+      undo[2]=[];setStep(2);
+      say('<b>Открыта готовая модель «'+esc(f.name)+'» — шаг 2 (ползунки).</b>\nМожно настроить ползунки вручную или нажать «🪄 Автоматизировать», затем «⬇ Скачать».');
+    }else{
+      await loadInto(1,f);undo[1]=[];lastSent=null;setStep(1);
+      const s=st(1);
+      if(!s||!s.model)say('<span class="bad">Не удалось открыть «'+esc(f.name)+'». Подходят экспорт FreeCAD (HTML), OBJ, STL, GLB.</span>');
+      else if(s.dims)say('<b>Открыт файл с размерами «'+esc(f.name)+'» — шаг 1 ('+s.dims+' разм.).</b>\nНедостающие размеры можно доставить «🪄 Автоматизировать». '+DIM_HINT);
+      else say('<b>Модель «'+esc(f.name)+'» открыта. Шаг 1: нужно проставить размеры.</b>\nНажмите «🪄 Автоматизировать» — ассистент поставит габариты и размер каждой стенки, кармана и ступени и назовёт их. Или ставьте размеры вручную инструментами редактора.');
+    }
+  }catch(e){say('<span class="bad">Ошибка: '+esc(e.message||e)+'</span>')}
+  finally{busy(false)}
+}
+$('aFile').onchange=e=>{const f=e.target.files[0];e.target.value='';if(f)openFile(f)};
+
+// ---------- автоматизация ----------
+const AX=['X','Y','Z'];
+function report1(r){
+  const miss=r.missing||[],full=miss.every(x=>!x),part=r.limit&&r.added<r.total;
+  return '<b>Шаг 1 — размеры.</b> '+(part?'Поставлено основных размеров: '+r.added+' из '+r.total+', названо: '+r.named+'. ':'Добавлено размеров: '+r.added+', названо: '+r.named+'. ')+
+    (full?'<span class="good">Каркас определён полностью по X, Y, Z.</span>':'<span class="bad">Не хватает размеров: '+miss.map((x,k)=>AX[k]+' '+x).join(', ')+' — их можно поставить вручную или ещё раз «🪄 Автоматизировать».</span>')+'\n'+DIM_HINT;
+}
+function report2(r){
+  return '<b>Шаг 2 — ползунки.</b> Групп синхронизации: '+r.groups+'; под замком 🔒: '+r.locked+'; скрыто габаритов: '+r.hidden+'; пределы заданы: '+r.limits+
+    (r.tightened?', уточнено по реальному ходу: '+r.tightened:'')+'.\nСамопроверка: Проверено положений: '+r.checked+' — '+
+    (r.bad.length?'<span class="bad">сбои: '+esc(r.bad.join(', '))+'</span>':'<span class="good">сбоев нет</span>')+
+    '.\nЛюбой ползунок можно поправить вручную (замки, группы, пределы, видимость). Готово — «⬇ Скачать».';
+}
+// размеры без понятных названий: окно со списком предложенных названий (их можно поправить)
+function namesHtml(pr,n){
+  return '<b>У '+pr.length+' размер'+(pr.length===1?'а':'ов')+' нет понятного названия.</b>\n'+
+    (n?'Можно только дать им названия или ещё и добавить недостающие размеры ('+n+').':'Ассистент предлагает названия — их можно поправить:')+
+    '<div class="ask-names">'+pr.map(x=>'<label class="ask-row"><span class="was" title="'+esc(x.cur)+'">'+(x.cur?'«'+esc(x.cur)+'»':'без названия')+' · '+esc(x.text)+'</span>'+
+      '<input class="ask-name" data-id="'+esc(x.id)+'" value="'+esc(x.name)+'"></label>').join('')+'</div>';
+}
+const readNames=()=>[...document.querySelectorAll('#aAskText input.ask-name')].map(i=>({id:i.dataset.id,name:i.value.trim()})).filter(x=>x.name);
+$('aAuto').onclick=async()=>{
+  let opts=null,names=null;
+  if(step===1){
+    const n=API(1).plan().count,pr=API(1).nameProposals?API(1).nameProposals():[];
+    if(pr.length){
+      const r=await ask(namesHtml(pr,n),[['aAskCancel','Отмена','',0]].concat(n?[['aAskAdd','🪄 Добавить размеры','',4]]:[],[['aAskNames','Дать названия','pri',3]]));
+      if(!r.v)return;
+      names=readNames();
+      if(r.v===3){
+        busy(true);await sleep(30);
+        try{
+          const before=API(1).project(),q=API(1).rename(names);
+          if(before)undo[1].push(before);
+          say('<b>Шаг 1 — названия.</b> Названо размеров: '+q.named+'; размеры не добавлялись.\n'+names.map(x=>'«'+esc(x.name)+'»').join(', ')+'.\nНазвания можно поправить в карточках справа; «↶ Отменить» вернёт прежние.');
+        }catch(e){say('<span class="bad">Ошибка: '+esc(e.message||e)+'</span>')}
+        finally{busy(false)}
+        return;
+      }
+    }
+    if(n>COMPLEX){
+      const r=await ask('<b>Деталь сложная: ассистент может поставить '+n+' размеров.</b>\nСколько основных размеров сделать? Сначала ставятся габариты, затем самые большие карманы и ступени, затем стенки.',
+        [['aAskCancel','Отмена','',0],['aAskAll','Все '+n,'',2],['aAskOk','Поставить','pri',1]],{def:Math.min(12,n),max:n});
+      if(!r.v)return;
+      if(r.v===1){if(!(r.n>0)){say('<span class="bad">Введите число размеров больше нуля.</span>');return}opts={limit:Math.min(r.n,n)}}
+    }
+  }
+  busy(true);await sleep(30);
+  try{
+    const a=API(step),before=step===1?a.project():a.model(),r=a.automate(opts);
+    if(!r.ok){say('<span class="bad">'+esc(r.msg)+'</span>');return}
+    // названия из окна (с правками) — тем, кто после добавления всё ещё без понятного названия
+    if(names&&names.length){const left=new Set(a.nameProposals().map(x=>x.id));r.named+=a.rename(names.filter(x=>left.has(x.id))).named}
+    if(before)undo[step].push(before);
+    if(opts)r.limit=opts.limit;
+    say(step===1?report1(r):report2(r));
+  }catch(e){say('<span class="bad">Ошибка автоматизации: '+esc(e.message||e)+'</span>')}
+  finally{busy(false)}
+};
+$('aUndo').onclick=async()=>{
+  const s=undo[step].pop();if(!s)return;
+  busy(true);
+  try{const r=await loadInto(step,asFile(s));if(!r.ok){say(convFail(r,'прежнее состояние'));return}say('<b>Отменено.</b> Вернулось состояние до последней автоматизации на шаге '+step+'.')}
+  finally{busy(false)}
+};
+$('aSave').onclick=()=>{const a=API(step);if(a)a.save()};
+renderBuf();
+</script>
+</body>
+</html>

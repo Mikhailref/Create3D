@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OBJ → HTML конвертер моделей</title>
+<style>
+:root{--bg:#f3f4f6;--fg:#1f2937;--mut:#6b7280;--card:rgba(255,255,255,.92);--bd:#d1d5db;--ac:#2563eb;--ok:#059669;--pw:300px;--nm:var(--fg);box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111418;--fg:#e5e7eb;--mut:#9ca3af;--card:rgba(30,34,41,.92);--bd:#374151;--ac:#60a5fa;--ok:#34d399;--nm:#fff}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px 12px;backdrop-filter:blur(8px);font-size:calc(13px*var(--fz,1))}
+.s{font-size:calc(12px*var(--fz,1));color:var(--mut);line-height:1.5}
+#info{position:fixed;left:12px;top:12px;max-width:calc(100vw - var(--pw) - 40px)}
+.panel{position:fixed;right:12px;top:12px;bottom:12px;width:var(--pw);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin}
+.panel>.card{flex-shrink:0}
+.panel>.card:last-child{flex-grow:1}
+@media (min-width:721px){body.viewer .panel,body.viewer .rz{bottom:62px}}
+.ax{border-top:1px solid var(--bd);padding-top:6px;margin-top:2px}
+.ax b,.names b{font-size:calc(12px*var(--fz,1));color:var(--ac)}
+.row{display:flex;flex-direction:column;gap:2px;margin:4px 0}
+.row .h{display:flex;justify-content:space-between;align-items:center;font-size:calc(12px*var(--fz,1));color:var(--mut);gap:6px}
+.row .h.t{color:var(--fg);font-weight:600}
+.row.off{opacity:.45}
+#fnBox{display:flex;flex-direction:column;gap:6px;padding:2px 2px 8px}
+#fnBox[hidden],#fnBox .fnsec[hidden]{display:none}
+.fnsec{border:1px solid var(--rbd);border-radius:9px;background:var(--rbg);padding:5px 8px}
+.fnsec.test{border-style:dashed}
+.fnh{font-size:calc(11px*var(--fz,1));font-weight:700;color:var(--mut);margin-bottom:2px}
+.fnrow{display:flex;flex-wrap:wrap;align-items:center;gap:3px 8px;padding:3px 0}
+.fnlab{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:calc(12px*var(--fz,1))}
+.fnck{width:16px;height:16px;margin:0;accent-color:#16a34a}
+.fnst{font-size:calc(10.5px*var(--fz,1));color:var(--mut);flex:1 1 120px}
+.fnrow.on .fnst{color:#16a34a}
+.fnd{flex:1 1 100%;font-size:calc(10.5px*var(--fz,1));color:var(--mut);line-height:1.3}
+#fnBox button{font:inherit;font-size:calc(11px*var(--fz,1));font-weight:600;color:var(--ac);background:var(--rbg);border:1px solid var(--rbd);border-radius:7px;padding:2px 8px;cursor:pointer;white-space:nowrap}
+:root{--pnl:#e4e8ee;--rbg:#fff;--rbd:#7c8aa0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--pnl:#14171c;--rbg:#2c333f;--rbd:#7b879c}}
+:root[data-theme="dark"]{--pnl:#14171c;--rbg:#2c333f;--rbd:#7b879c}
+.panel>.card:last-child{background:var(--pnl)}
+#axes .row{border:2px solid var(--rbd);border-radius:10px;padding:7px 9px;margin:8px 0;background:var(--rbg);box-shadow:0 1px 4px rgba(0,0,0,.18)}
+#axes .row.cm{border:2px solid #8b5cf6}
+#axes .row .h{flex-wrap:wrap}
+#axes .row .h .mvh{order:-3}
+#axes .row .h .lt{order:-2;flex:1 1 calc(100% - 30px)}
+#axes .row .h input[type=number]{margin-left:auto}
+#rs{background:var(--rbg)}
+#axes .row.dragging{opacity:.7;outline:2px dashed var(--ac)}
+#axes .row .h{gap:4px}
+.mvh{cursor:grab;touch-action:none;user-select:none;color:var(--mut);flex-shrink:0;font-size:calc(14px*var(--fz,1));line-height:1}
+.rgl{display:flex;align-items:center;gap:4px}
+.rgl input[type=range]{flex:1;min-width:0}
+.row button.mvb{padding:0;width:20px;height:18px;flex-shrink:0;justify-content:center;border-radius:5px;font-size:9px;line-height:1}
+.row button.mvb:disabled{opacity:.3;cursor:default}
+.dqp{display:inline-flex;align-items:center;gap:2px;font-size:calc(12px*var(--fz,1));cursor:pointer;user-select:none;flex-shrink:0}
+.dqp input{width:15px;height:15px;margin:0;accent-color:var(--ac);flex-shrink:0}
+.dqp span{filter:grayscale(1);opacity:.5;line-height:1}
+.dqp.on span{filter:none;opacity:1}
+#axes .row .h .chk{accent-color:#16a34a}
+#thrBox button{font:inherit;font-size:calc(11px*var(--fz,1));font-weight:600;color:var(--ac);background:var(--rbg);border:1px solid var(--rbd);border-radius:7px;padding:2px 8px;cursor:pointer;white-space:nowrap}
+#thrBox button:disabled{opacity:.45;cursor:default}
+.row .h{align-items:center}
+.row .lt{flex:1;min-width:0;font:inherit;font-size:calc(12px*var(--fz,1));color:var(--nm);font-weight:700;background:transparent;border:1px solid transparent;border-radius:5px;padding:1px 3px}
+.row input.lt:hover,.row input.lt:focus{border-color:var(--bd);outline:none}
+.row .chk{width:15px;height:15px;margin:0;accent-color:var(--ac);flex-shrink:0}
+.dqk{display:inline-flex;align-items:center;gap:2px;font-size:calc(12px*var(--fz,1));cursor:pointer;user-select:none;flex-shrink:0}
+.dqk input{width:15px;height:15px;margin:0;accent-color:var(--ac);flex-shrink:0}
+.dqk span{filter:grayscale(1);opacity:.5;line-height:1}
+.dqk.on span{filter:none;opacity:1}
+.dqn{font-size:calc(11px*var(--fz,1));color:#d97706}
+.lkrow{display:flex;align-items:center;gap:7px;font-size:calc(12px*var(--fz,1));font-weight:700;margin:0;cursor:pointer;color:var(--ac)}
+.cmin{font-size:calc(11px*var(--fz,1));font-weight:600;color:#8b5cf6;white-space:pre-line}
+.cmls{font-size:calc(11px*var(--fz,1));color:var(--mut)}
+.row .gear{padding:0 5px;border-radius:6px;font-size:calc(13px*var(--fz,1));line-height:20px;flex-shrink:0}
+.row .gear.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.dset{display:flex;flex-direction:column;gap:5px;margin:3px 0 4px;padding:7px 8px;border:1px solid var(--bd);border-radius:8px;background:rgba(127,127,127,.08)}
+.dset[data-cm]{border-color:#8b5cf6}
+.ck{display:flex;align-items:center;gap:6px;font-size:calc(11px*var(--fz,1));cursor:pointer}
+.ck input{width:14px;height:14px;margin:0;accent-color:var(--ac);flex-shrink:0}
+.ck span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ck em{margin-left:auto;font-style:normal;color:var(--mut)}
+.dqx input.gnm{width:84px}
+.dqs{font-size:calc(11px*var(--fz,1));color:var(--mut)}
+.cmsum{font-size:calc(11px*var(--fz,1));font-weight:700}
+.dset button.cmdel{font-size:calc(11px*var(--fz,1));padding:3px 9px;align-self:flex-start}
+.cmbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 2px;flex-wrap:wrap}
+.cmbar>button{border-color:#8b5cf6;color:#8b5cf6;font-weight:700;font-size:calc(12px*var(--fz,1));padding:5px 11px}
+.cmbar>button:disabled{opacity:.45;cursor:default}
+.row.inc input[type=range],.row.inc input[type=number]{opacity:.4}
+#thrBox{display:flex;flex-direction:row;flex-wrap:wrap;gap:7px 14px;padding:2px 2px 8px}
+#thrBox .lkrow{flex:0 1 auto;min-width:34px;font-size:calc(11px*var(--fz,1));font-weight:600;gap:4px;white-space:nowrap}
+#thrBox .lkrow span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#thrBox .lkrow input{width:13px;height:13px}
+#thrBox[hidden],#thrBox .lkrow[hidden],#thrBox button[hidden]{display:none}
+.lkrow input{width:15px;height:15px;margin:0;accent-color:var(--ac)}
+.dqx{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:calc(11px*var(--fz,1));color:var(--mut)}
+.dqx input{width:58px;font:inherit;font-size:calc(11px*var(--fz,1));color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:1px 4px}
+.dqx select{font:inherit;font-size:calc(11px*var(--fz,1));color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:1px 3px;flex:1;min-width:0}
+.dqx option{color:#111}
+.tools{display:flex;flex-wrap:nowrap;white-space:nowrap;align-items:center;gap:6px;margin:0 0 8px;overflow-x:auto;scrollbar-width:none}
+.tools[hidden]{display:none}
+.fzb{margin-left:auto;display:flex;gap:4px;flex-shrink:0}
+.fzb button{font-weight:700}
+.ax.sec{margin-top:12px;padding-top:10px;border-top:1px solid var(--bd)}
+.ax.sec>b{display:block;font-size:12px;margin:0 0 6px;padding:3px 8px;border-left:3px solid var(--bd);border-radius:4px;background:rgba(127,127,127,.12);color:var(--fg)}
+#axes>.ax:first-child{border-top:0;padding-top:0;margin-top:0}
+.tools button{padding:2px 9px;font-size:calc(11px*var(--fz,1));border-radius:999px}
+.tools a{font-size:calc(11px*var(--fz,1));color:var(--ac);cursor:pointer;text-decoration:underline;margin-inline-start:4px}
+.row input[type=number]{width:62px;font:inherit;font-size:calc(12px*var(--fz,1));color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:2px 4px}
+input[type=range]{width:100%;margin:0;accent-color:var(--ac)}
+.names{display:grid;grid-template-columns:34px 1fr;gap:4px 6px;align-items:center}
+.names b{grid-column:1/-1;margin-top:4px}
+.names span{font-size:calc(11px*var(--fz,1));color:var(--mut)}
+.names input,.names select,.unit select{font:inherit;font-size:calc(12px*var(--fz,1));color:var(--fg);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:3px 6px;min-width:0;width:100%}
+.names option,.unit option{color:#111}
+.unit{display:flex;align-items:center;gap:8px;font-size:calc(12px*var(--fz,1));color:var(--mut)}
+.unit select{width:auto;flex:1}
+.bar{position:fixed;left:12px;right:calc(var(--pw) + 24px);bottom:14px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+button,label.btn{font:inherit;font-size:calc(13px*var(--fz,1));color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:999px;padding:7px 13px;cursor:pointer;backdrop-filter:blur(8px);display:inline-flex;align-items:center;gap:6px}
+button.on{border-color:var(--ac);color:var(--ac)}
+button.dl{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600;border-radius:10px;padding:10px 13px;justify-content:center}
+button[hidden]{display:none}
+label.primary{background:var(--ac);border-color:var(--ac);color:#fff}
+input[type=color]{width:22px;height:22px;border:0;padding:0;background:none;cursor:pointer}
+input[type=file]{display:none}
+#drop{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;text-align:center;color:var(--mut);font-size:calc(16px*var(--fz,1));padding:24px}
+#drop.hide{display:none}
+#over{position:fixed;inset:10px;border:3px dashed var(--ac);border-radius:16px;display:none;pointer-events:none}
+#over.show{display:block}
+/* сворачиваемая карточка */
+.chead{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;background:none;border:0;border-radius:0;padding:0;font:inherit;font-size:calc(14px*var(--fz,1));font-weight:700;color:var(--ac);backdrop-filter:none;cursor:pointer}
+.chev{font-style:normal;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--ac);color:#fff;font-size:calc(20px*var(--fz,1));line-height:1;transition:transform .25s;transform:rotate(180deg);flex-shrink:0}
+.chead:hover .chev{filter:brightness(1.12)}
+.collapsed .chev{transform:none}
+.cbody{display:grid;grid-template-rows:1fr;transition:grid-template-rows .25s ease}
+.cin{overflow:hidden;min-height:0;padding-top:8px}
+.collapsed .cbody{grid-template-rows:0fr}
+.collapsed .cin{padding-top:0;visibility:hidden;transition:visibility 0s .25s}
+/* ручка изменения размера панели */
+.rz{position:fixed;top:12px;bottom:12px;right:calc(var(--pw) + 12px - 6px);width:12px;cursor:ew-resize;touch-action:none;z-index:5;display:flex;align-items:center;justify-content:center}
+.rz::before,.rzm::before{content:"";background:var(--bd);border-radius:3px}
+.rz::before{width:3px;height:44px}
+.rz:hover::before,.rz.drag::before,.rzm.drag::before{background:var(--ac)}
+.rzm{display:none;position:sticky;top:0;z-index:5;flex-shrink:0;height:14px;margin:-4px 0 -4px;cursor:ns-resize;touch-action:none;align-items:center;justify-content:center}
+.rzm::before{width:44px;height:4px}
+#dimOv{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.dlab{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;cursor:grab;touch-action:none;user-select:none;white-space:nowrap;background:rgba(15,23,42,.92);color:#f8fafc;border:1px solid #f59e0b;border-radius:6px;padding:1px 6px;font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.dlab:active{cursor:grabbing}
+#axes .row{transition:border-color .15s,background-color .15s,box-shadow .15s;cursor:pointer}
+#axes .row:hover{border-color:color-mix(in srgb,var(--rbd) 45%,var(--ac))}
+#axes .row.open{background:color-mix(in srgb,var(--rbg) 91%,var(--ac))}
+#axes .row input,#axes .row select,#axes .row button,#axes .row label,#axes .row .dset{cursor:auto}
+#axes .row.flash-b{border-color:var(--ac);box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 55%,transparent)}
+#axes .row.flash-all{border-color:var(--ac);background:color-mix(in srgb,var(--rbg) 72%,var(--ac));box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 55%,transparent)}
+.dqk.na,.dqp.na{opacity:.38;cursor:help}
+.dqk.na input,.dqp.na input{cursor:help}
+.dmv{display:flex;align-items:center;gap:6px;font-size:calc(12px*var(--fz,1));color:var(--fg);cursor:pointer;margin:2px 0 4px}
+.dmv input{margin:0;accent-color:var(--ac)}
+#tip{position:fixed;z-index:50;max-width:240px;background:#111827;color:#fff;font-size:calc(12px*var(--fz,1));line-height:1.4;padding:6px 9px;border-radius:8px;pointer-events:none;display:none;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+body.viewer .conv-only{display:none!important}
+body.viewer .bar{right:12px}
+body.viewer #drop{display:none}
+@media (max-width:720px){
+  #info{max-width:calc(100vw - 24px);top:8px;left:8px;padding:6px 10px}
+  .bar{left:8px;right:8px;top:auto;bottom:auto;position:fixed;top:calc(env(safe-area-inset-top,0px) + 56px);flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;padding-bottom:2px}
+  .bar button,.bar label.btn{white-space:nowrap;padding:6px 11px;font-size:calc(12px*var(--fz,1))}
+  .panel{left:8px;right:8px;top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:auto;max-height:var(--ph,46vh)}
+  .rz{display:none}
+  .rzm{display:flex}
+  body.viewer .bar{right:8px}
+}
+</style></head>
+<body>
+<canvas id="c"></canvas>
+<div id="drop"><div>Перетащите сюда файл .obj или .html (экспорт FreeCAD или проект из редактора размеров)<br>или нажмите «Открыть OBJ / HTML»</div></div>
+<div id="over"></div>
+<div class="card s" id="info">Файл не загружен</div>
+<div class="rz" id="rz" title="Потяните, чтобы изменить ширину (двойной клик — сбросить)"></div>
+<div id="tip"></div>
+<div class="panel" id="panel">
+  <div class="rzm" id="rzm"></div>
+  <div class="card conv-only" id="convBox" hidden>
+    <button type="button" class="chead" id="dataHead" aria-expanded="true"><span>Данные для сайта</span><i class="chev">▾</i></button>
+    <div class="cbody"><div class="cin">
+      <div class="names" id="names">
+        <span>RU</span><input id="nr" placeholder="Название (русский)">
+        <span>EN</span><input id="ne" placeholder="Name (English)">
+        <span>HE</span><input id="nh" placeholder="שם (עברית)" dir="rtl">
+        <span>Тег</span><div style="display:flex;gap:4px"><input id="tr" placeholder="RU" value="Модель"><input id="te" placeholder="EN" value="Model"><input id="th" placeholder="HE" value="דגם" dir="rtl"></div>
+        <span>Опис.</span><div style="display:flex;flex-direction:column;gap:4px"><input id="dr" placeholder="Описание RU (для поиска на сайте)"><input id="de" placeholder="Description EN"><input id="dh" placeholder="תיאור HE" dir="rtl"></div>
+      </div>
+      <div class="unit" style="margin-top:8px">Единицы в файле
+        <select id="unit"><option value="1">мм</option><option value="10">см</option><option value="1000">м</option><option value="25.4">дюймы</option></select>
+      </div>
+    </div></div>
+  </div>
+  <div class="card">
+    <div class="tools conv-only" id="tools" hidden>
+      <button type="button" data-ll="ru" class="on">RU</button><button type="button" data-ll="en">EN</button><button type="button" data-ll="he">HE</button>
+      <span class="fzb"><button type="button" id="fzm" data-tip="Шрифт меньше">A−</button><button type="button" id="fzp" data-tip="Шрифт больше">A+</button></span>
+    </div>
+    <div class="conv-only" id="thrBox" hidden>
+      <label class="lkrow" data-tip="Упростить резьбу"><input type="checkbox" id="thr"><span>Упростить резьбу</span></label>
+      <label class="lkrow" data-tip="Все ползунки"><input type="checkbox" id="allOn" checked><span>Все ползунки</span></label>
+      <label class="lkrow" data-tip="Масштаб и оси"><input type="checkbox" id="onlyTot"><span>Масштаб и оси</span></label>
+      <label class="lkrow" id="pinBox" data-tip="Поставить или снять фиксатор центра 🎯 сразу у всех размеров" hidden><input type="checkbox" id="allPin"><span>Все 🎯 центры</span></label>
+      <label class="lkrow" id="scBox" data-tip="Показывать ползунок масштаба в %" hidden><input type="checkbox" id="scOn"><span>Масштаб %</span></label>
+      <label class="lkrow" id="dimBox" data-tip="Показать или скрыть на модели все размеры со значениями" hidden><input type="checkbox" id="dimAll"><span>Размеры на модели</span></label>
+      <button type="button" id="allGear" data-tip="Свернуть настройки ⚙ у всех размеров" hidden>⚙ Свернуть все</button>
+    </div>
+    <div class="conv-only" id="fnBox" hidden>
+      <div class="fnsec" id="fnMain" hidden><div class="fnh">Функции модели</div><div class="fnl"></div></div>
+      <div class="fnsec test" id="fnTest"><div class="fnh">🧪 Тестовые функции</div><div class="fnl"></div></div>
+    </div>
+    <div id="axes"></div>
+    <button id="rs">Исходные размеры</button>
+    <button id="bd" class="dl conv-only" hidden>⬇ Скачать готовый HTML</button>
+    <div class="s" id="msg"></div>
+  </div>
+</div>
+<div class="bar">
+<label class="btn primary conv-only">Открыть OBJ / HTML<input id="f" type="file" accept=".obj,.html,.htm"></label>
+<button id="bz" class="on conv-only">Z вверх</button>
+<button id="bs" class="on conv-only">Сглаживание</button>
+<button id="bw">Каркас</button>
+<button id="br" class="on">Вращение</button>
+<label class="btn">Цвет <input id="col" type="color" value="#4a4d52"></label>
+<button id="bv">Сброс вида</button>
+</div>
+<script type="text/plain" id="core-src"><<<core-converter>>></script>
+<script type="text/plain" id="site-adapter-src"><<<site-runtime>>></script>
+<script id="embed" type="application/json"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script id="app">
+const CORE=new Function(document.getElementById('core-src').textContent+';return {parseOBJ,parseFreeCAD,simplifyThreads,weld,expand,canon,geoDetect,geoApply,geoMeta,geoParams,geoSet,geoRange,geoVals,geoState,geoOff,buildEntryGeo,slug,b64dec,faceNormals,dmBuild,dmLock,dmLim,dmCap,dmPin,dmPinReset,dmViewFix,cmCap,cmSum0,dmOw,geoOk}')();
+const {parseOBJ,parseFreeCAD,simplifyThreads,weld,expand,canon,geoDetect,geoApply,geoMeta,geoParams,geoSet,geoRange,geoVals,geoState,geoOff,buildEntryGeo,slug,b64dec,faceNormals,dmBuild,dmLock,dmLim,dmCap,dmPin,dmPinReset,dmViewFix,cmCap,cmSum0,dmOw,geoOk}=CORE;
+const $=id=>document.getElementById(id);
+const cv=$('c'),r=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+r.setPixelRatio(Math.min(devicePixelRatio,2));
+const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(40,1,1,5000);
+sc.add(new THREE.HemisphereLight(0xffffff,0x667788,.8));
+const d1=new THREE.DirectionalLight(0xffffff,.9);d1.position.set(1,1.5,1);cam.add(d1);sc.add(cam);
+const d2=new THREE.DirectionalLight(0xffffff,.3);d2.position.set(-1,.3,-1);sc.add(d2);
+const mat=new THREE.MeshStandardMaterial({color:0x4a4d52,metalness:.1,roughness:.55,side:THREE.DoubleSide});
+const ctl=new THREE.OrbitControls(cam,cv);ctl.enableDamping=true;ctl.autoRotate=true;ctl.autoRotateSpeed=1.5;
+const grp=new THREE.Group();sc.add(grp);
+let dmNote='',PEND=null,canonC=null,baseRaw=null,baseIdx=null,G=null,g=null,st=null,NB=null,geo=null,grid=null,fileName='',rad=1,hgt=1,out=null,W=null,viewer=false,viewerName='';
+const UI={off:new Set(),open:new Set(),lab:{ru:{},en:{},he:{}}};let labLang='ru';
+const GROUPS=[['Масштаб и размеры',['sc','ax','pr']],['Размеры из редактора',['dq','cm']],['Диаметры',['dm']],['Отверстия',['ho']],['Уклоны',['sp']]];
+let ROWS={},XF=null;const TR={done:false};
+
+function buildNB(){
+  NB=null;if(!canonC||!$('bs').classList.contains('on'))return;
+  const pos=canonC.pos,n=canonC.n,fn=faceNormals(pos,n),c=Math.cos(40*Math.PI/180),map=new Map();
+  const key=i=>Math.round(pos[i*3]*1e4)+','+Math.round(pos[i*3+1]*1e4)+','+Math.round(pos[i*3+2]*1e4);
+  for(let i=0;i<n*3;i++){const k=key(i);(map.get(k)||map.set(k,[]).get(k)).push((i/3)|0)}
+  const off=new Int32Array(n*3+1),list=[];
+  for(let i=0;i<n*3;i++){
+    const f=(i/3)|0;
+    for(const j of map.get(key(i)))if(fn[j*3]*fn[f*3]+fn[j*3+1]*fn[f*3+1]+fn[j*3+2]*fn[f*3+2]>c)list.push(j);
+    off[i+1]=list.length;
+  }
+  NB={off,list:Int32Array.from(list)};
+}
+function refresh(fit){
+  if(!canonC)return;
+  const n=canonC.n,I=canonC.I,zu=$('bz').classList.contains('on');
+  geoApply(canonC.U,G,st,W);
+  for(let t=0;t<n*3;t++){const q=I[t]*3;out[t*3]=W[q];out[t*3+1]=W[q+1];out[t*3+2]=W[q+2]}
+  const fn=faceNormals(out,n),nr=new Float32Array(n*9);
+  for(let i=0;i<n*3;i++){
+    let x=0,y=0,z=0;
+    if(NB){for(let q=NB.off[i];q<NB.off[i+1];q++){const j=NB.list[q]*3;x+=fn[j];y+=fn[j+1];z+=fn[j+2]}}
+    else{const j=((i/3)|0)*3;x=fn[j];y=fn[j+1];z=fn[j+2]}
+    const l=Math.hypot(x,y,z)||1;
+    if(zu){nr[i*3]=x/l;nr[i*3+1]=z/l;nr[i*3+2]=-y/l}else{nr[i*3]=x/l;nr[i*3+1]=y/l;nr[i*3+2]=z/l}
+  }
+  const w=geo.attributes.position.array;
+  let mn=[1e9,1e9,1e9],mxv=[-1e9,-1e9,-1e9];
+  for(let v=0;v<n*3;v++){
+    const x=out[v*3],y=out[v*3+1],z=out[v*3+2];
+    const q=zu?[x,z,-y]:[x,y,z];
+    for(let k=0;k<3;k++){w[v*3+k]=q[k];if(q[k]<mn[k])mn[k]=q[k];if(q[k]>mxv[k])mxv[k]=q[k]}
+  }
+  dmViewFix(G,st,zu,mn,mxv);
+  const cx=(mn[0]+mxv[0])/2,cz=(mn[2]+mxv[2])/2;XF={zu,cx,y0:mn[1],cz};
+  for(let v=0;v<n*3;v++){w[v*3]-=cx;w[v*3+1]-=mn[1];w[v*3+2]-=cz}
+  geo.attributes.position.needsUpdate=true;
+  geo.attributes.normal.array.set(nr);geo.attributes.normal.needsUpdate=true;
+  geo.computeBoundingSphere();
+  hgt=mxv[1]-mn[1];rad=Math.max(mxv[0]-mn[0],hgt,mxv[2]-mn[2])||1;
+  if(fit){
+    if(grid)sc.remove(grid);
+    grid=new THREE.GridHelper(rad*6,24,0x888888,0x888888);grid.material.transparent=true;grid.material.opacity=.25;sc.add(grid);
+    view();
+  }
+  const sm=[1e9,1e9,1e9],sM=[-1e9,-1e9,-1e9];
+  for(let v=0;v<n*3;v++)for(let k=0;k<3;k++){const x=out[v*3+k];if(x<sm[k])sm[k]=x;if(x>sM[k])sM[k]=x}
+  const dm=[0,1,2].map(k=>sM[k]-sm[k]); // X, Y, Z исходной модели
+  $('info').innerHTML='<b>'+(viewer?viewerName:fileName).replace(/</g,'&lt;')+'</b><br>'+n.toLocaleString('ru')+' треугольников<br>X × Y × Z: '+dm.map(x=>x.toFixed(1)).join(' × ')+' мм'+(viewer?'':'<br>'+(st.dm?'Режим: размеры из редактора ('+st.dm.length+')':'Найдено: отверстий '+g.hole.length+', диаметров '+g.boss.length+', уклонов '+g.slope.length+(G&&G.thr?', резьбовых зон '+G.thr:'')+(g.rel&&g.rel.length?', связей размеров '+g.rel.length:'')));
+  syncUI();dimDraw();
+}
+function makeMesh(){
+  grp.clear();const n=canonC.n;
+  geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*9),3));
+  geo.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(n*9),3));
+  grp.add(new THREE.Mesh(geo,mat));out=new Float32Array(n*9);W=new Float32Array(canonC.U.length);
+}
+const plist=()=>geoParams({...g,st});
+const labText=(p,l)=>UI.lab[l][p.key]||p.lab[l];
+// ---------- настройки размеров прямо в конвертере: ограничение, пределы, группы, составные размеры ----------
+const escH=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dimName=j=>UI.lab[labLang]['q'+j]||st.dm[j].lab[labLang];
+const cmName=i=>UI.lab[labLang]['c'+i]||st.cm[i].lab[labLang];
+const num2=v=>+v.toFixed(2);
+// пересобрать панель, не теряя прокрутку
+function rebuild(){const p=$('panel'),y=p.scrollTop;buildUI();refresh();p.scrollTop=y}
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e}
+function gearBtn(d,key){
+  const b=el('button','gear','⚙');b.type='button';b.dataset.tip='Настройки размера';
+  if(UI.open.has(key))b.classList.add('on');
+  b.onclick=()=>{if(UI.open.has(key))UI.open.delete(key);else UI.open.add(key);rebuild()};
+  d.querySelector('.h').appendChild(b);
+}
+// группы: 'g' — синхронизация (одно значение), 'pg' — пропорция (одно соотношение)
+const GRN={g:'gn',pg:'pgn'};
+const items=()=>st.dm.map((s,j)=>({s,key:'q'+j})).concat((st.cm||[]).map((s,i)=>({s,key:'c'+i})));
+const itemName=key=>key[0]==='q'?dimName(+key.slice(1)):cmName(+key.slice(1));
+const groupIds=k=>[...new Set(items().map(x=>x.s[k]||0).filter(x=>x))].sort((a,b)=>a-b);
+const groupName=(k,n)=>{const x=items().find(x=>x.s[k]===n&&x.s[GRN[k]]);return x?x.s[GRN[k]]:'Группа '+n};
+// ведомые: в группе, но не первые в ней — их ползунок по умолчанию не показывается
+const followers=()=>{const L=items();return new Set(L.filter(x=>['g','pg'].some(k=>x.s[k]&&L.find(y=>y.s[k]===x.s[k]).s!==x.s)).map(x=>x.key))};
+function setGroup(key,k,val){
+  const L=items(),s=L.find(x=>x.key===key).s,was=followers();
+  const n=val==='new'?Math.max(0,...L.map(x=>x.s[k]||0))+1:(+val||0);
+  const clash=n&&(key[0]==='c'?s.m.some(j=>st.dm[j][k]===n):(st.cm||[]).some(c=>c.m.indexOf(+key.slice(1))>=0&&c[k]===n));
+  if(clash){rebuild();$('msg').textContent='Составной размер и входящий в него размер не могут быть в одной группе.';return}
+  delete s[GRN[k]];
+  if(n){const o=L.find(x=>x.s!==s&&x.s[k]===n&&x.s[GRN[k]]);s[k]=n;if(o)s[GRN[k]]=o.s[GRN[k]]}else delete s[k];
+  const now=followers();
+  items().forEach(x=>{
+    if(now.has(x.key)&&!was.has(x.key)){x.s.fol=1;UI.off.add(x.key)}
+    else if(was.has(x.key)&&!now.has(x.key)){delete x.s.fol;UI.off.delete(x.key)}
+  });
+  if(!s.g&&!s.pg&&s.fol){delete s.fol;UI.off.delete(key)}
+  delete st.cb;TR.done=false;rebuild();
+}
+// предел от другого размера: если сейчас размер уже больше, сразу уменьшаем
+function applyCap(i){
+  const s=st.dm[i];
+  if(!(s.rf>=0)&&!(s.rfv>0))return;
+  const cur=geoVals(g,st)['q'+i],hi=dmLim(st,i)[1];
+  if(cur>hi+1e-6)geoSet(g,st,'q'+i,hi);
+}
+const capOf=i=>{const s=st.dm[i];return s.rf>=0?dmCap(s,geoVals(g,st)['q'+s.rf]??st.dv[s.rf]):s.rfv>0?s.rfv:null};
+// пределы «от/до» в мм или в процентах
+function unitBlock(box,s){
+  const r=el('div','dqx','<span>Лимит:</span><select class="lu" data-tip="В чём задавать пределы «от/до»"><option value="mm">размер (мм)</option><option value="pct">масштаб (%)</option></select>');
+  const u=r.querySelector('select');u.value=s.lm==='pct'?'pct':'mm';
+  u.onchange=()=>{if(u.value==='pct')s.lm='pct';else delete s.lm;rebuild()};
+  box.appendChild(r);
+}
+// «Ограничить существующим размером»
+function capBlock(box,s,others,apply,shown,low,live){
+  const on=s.rf>=0||s.rfv>0;
+  const c=el('label','ck','<input type="checkbox" class="ron"'+(on?' checked':'')+(others.length||on?'':' disabled')+'><span>Ограничить существующим размером</span>');
+  box.appendChild(c);
+  c.firstChild.onchange=e=>{
+    if(e.target.checked){s.rf=others[0];s.rop='*';s.rval=1;delete s.rfv;apply()}
+    else{delete s.rf;delete s.rfv;delete s.rop;delete s.rval}
+    delete st.cb;rebuild();
+  };
+  if(!on)return;
+  const r=el('div','dqx','<select class="rsel">'+(s.rf>=0?'':'<option value="">число из проекта: '+num2(s.rfv)+'</option>')+others.map(j=>'<option value="'+j+'">'+escH(dimName(j))+'</option>').join('')+'</select>');
+  const sel=r.firstChild;sel.value=s.rf>=0?String(s.rf):'';
+  sel.onchange=()=>{if(sel.value==='')return;s.rf=+sel.value;delete s.rfv;if(!s.rop){s.rop='*';s.rval=1}delete st.cb;apply();rebuild()};
+  box.appendChild(r);
+  if(s.rf>=0){
+    const f=el('div','dqx','<span>Формула: размер</span><select class="rop">'+[['*','×'],['/','÷'],['+','+'],['-','−']].map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('')+'</select><input type="number" step="any" class="rval"><span class="rcap"></span>');
+    const op=f.querySelector('.rop'),v=f.querySelector('.rval'),cap=f.querySelector('.rcap');
+    op.value=s.rop||'*';v.value=isFinite(+s.rval)?s.rval:1;
+    op.onchange=v.onchange=()=>{s.rop=op.value;if(v.value!==''&&isFinite(+v.value))s.rval=+v.value;delete st.cb;apply();rebuild()};
+    box.appendChild(f);
+    const w=el('div','dqn');box.appendChild(w);
+    live.push(vals=>{const h=shown(vals);cap.textContent='≤ '+num2(h);w.textContent=h<low-1e-6?'Предел меньше «от» ('+num2(low)+'): уменьшите «от»':'';w.hidden=!w.textContent});
+  }
+}
+function groupBlocks(box,s,key){
+  [['g','Синхр.:','Одинаковое значение у всех размеров группы'],['pg','Пропорц.:','Размеры группы меняются в том же соотношении']].forEach(([k,title,tip])=>{
+    const r=el('div','dqx','<span>'+title+'</span><select class="grp-'+k+'" data-tip="'+tip+'"><option value="0">— нет —</option>'+groupIds(k).map(n=>'<option value="'+n+'">'+escH(groupName(k,n))+'</option>').join('')+'<option value="new">＋ Новая группа</option></select>');
+    const sel=r.querySelector('select');sel.value=String(s[k]||0);
+    sel.onchange=()=>setGroup(key,k,sel.value);
+    if(s[k]){
+      const nm=el('input','gnm');nm.type='text';nm.placeholder='имя группы';nm.value=s[GRN[k]]||'';
+      nm.onchange=()=>{const t=nm.value.trim();items().forEach(x=>{if(x.s[k]===s[k]){if(t)x.s[GRN[k]]=t;else delete x.s[GRN[k]]}});rebuild()};
+      r.appendChild(nm);
+    }
+    box.appendChild(r);
+    if(s[k]){
+      const mem=items().filter(x=>x.s[k]===s[k]);
+      const info=el('div','cmls');info.textContent=mem.length<2?'Выберите эту же группу ещё у одного размера':'В группе: '+mem.map(x=>itemName(x.key)).join(', ');box.appendChild(info);
+      if(k==='g'&&Math.max(...mem.map(x=>x.s.mn))>Math.min(...mem.map(x=>x.s.mx))+1e-6){
+        const w=el('div','dqn');w.textContent='Пределы «от/до» в группе не пересекаются — расширьте их';box.appendChild(w);
+      }
+    }
+  });
+}
+function dimSettings(d,i,live){
+  const s=st.dm[i],box=el('div','dset');
+  if(dimCan(i)){
+    const lb=el('label','dmv','<input type="checkbox"><span>📏 Размер на модели</span>');lb.dataset.tip='Показывать этот размер со стрелками и значением на модели';
+    const cb=lb.querySelector('input');cb.checked=DIM.on&&DIM.show.has('q'+i);cb.disabled=!DIM.on;cb.onchange=()=>dimShow('q'+i,cb.checked);box.appendChild(lb);
+  }
+  const others=st.dm.map((x,j)=>j).filter(j=>j!==i&&(st.dm[j].t==='A')===(s.t==='A'));
+  if(s.t!=='A')unitBlock(box,s);
+  capBlock(box,s,others,()=>applyCap(i),()=>capOf(i),s.mn,live);
+  groupBlocks(box,s,'q'+i);
+  d.appendChild(box);
+}
+// краткая сводка настроек в свёрнутой строке
+function dimSummary(s){
+  const t=[];
+  if(s.g)t.push('Синхр.: '+groupName('g',s.g));
+  if(s.pg)t.push('Пропорц.: '+groupName('pg',s.pg));
+  if(s.rf>=0)t.push('≤ «'+dimName(s.rf)+'» '+({'*':'×','/':'÷','+':'+','-':'−'}[s.rop]||'×')+' '+(isFinite(+s.rval)?+s.rval:1));
+  else if(s.rfv>0)t.push('≤ '+num2(s.rfv));
+  return t.join(' · ');
+}
+// --- составные размеры ---
+const cmCan=j=>st.dm[j].t!=='A';
+function cmLimits(c){ // пределы по умолчанию: от половины до удвоенной суммы
+  const A=geoVals(g,st),sum=c.m.reduce((t,j)=>t+(A['q'+j]??st.dv[j]),0);
+  if(!(sum>0))return;
+  if(c.u){c.mn=Math.min(c.mn,sum);c.mx=Math.max(c.mx,sum)}else{c.mn=.5*sum;c.mx=2*sum}
+}
+function cmAdd(){
+  const cm=st.cm||(st.cm=[]);let n=1;while(cm.some(c=>c.lab.ru==='Составной размер '+n))n++;
+  cm.push({m:[],mn:0,mx:1,lab:{ru:'Составной размер '+n,en:'Combined size '+n,he:'מידה משולבת '+n}});
+  const key='c'+(cm.length-1);UI.open.add(key);delete st.cb;TR.done=false;rebuild();
+  if(ROWS[key])ROWS[key].rg.closest('.row').scrollIntoView({block:'nearest'});
+}
+const dimVals=v=>{const A={};st.dm.forEach((x,j)=>A[j]=v['q'+j]);return A};
+function applyCmCap(i){
+  const c=st.cm[i];if(c.m.length<2||!(c.rf>=0||c.rfv>0))return;
+  const v=geoVals(g,st),hi=cmCap(st,c,dimVals(v));
+  if(v['c'+i]>hi+1e-6)geoSet(g,st,'c'+i,hi);
+}
+// номера составных идут подряд: после удаления сдвигаем отметки и названия
+function cmRemap(map,off,lab){
+  const o=new Set(),l={ru:{},en:{},he:{}};
+  const mv=k=>{if(k[0]!=='c')return k;const n=map[+k.slice(1)];return n>=0?'c'+n:null};
+  off.forEach(k=>{const n=mv(k);if(n)o.add(n)});
+  for(const L in lab)for(const k in lab[L]){const n=mv(k);if(n)l[L][n]=lab[L][k]}
+  return {off:o,lab:l,mv};
+}
+function cmDelete(i){
+  const map=st.cm.map((c,j)=>j<i?j:j>i?j-1:-1),r=cmRemap(map,UI.off,UI.lab),open=new Set();
+  UI.open.forEach(k=>{const n=r.mv(k);if(n)open.add(n)});
+  UI.off=r.off;UI.lab=r.lab;UI.open=open;if(st.ord)st.ord=st.ord.map(r.mv).filter(x=>x);
+  st.cm.splice(i,1);
+  const now=followers();st.cm.forEach((c,j)=>{if(c.fol&&!now.has('c'+j)){delete c.fol;UI.off.delete('c'+j)}});
+  delete st.cb;TR.done=false;rebuild();
+}
+function cmSettings(d,i,live){
+  const c=st.cm[i],box=el('div','dset');
+  box.appendChild(el('div','cmls','Входят размеры:'));
+  st.dm.forEach((s,j)=>{
+    if(!cmCan(j))return;
+    const l=el('label','ck','<input type="checkbox" data-m="'+j+'"'+(c.m.indexOf(j)>=0?' checked':'')+'><span></span><em></em>');
+    l.children[1].textContent=dimName(j);
+    live.push(v=>{l.children[2].textContent=num2(v['q'+j])});
+    l.firstChild.onchange=e=>{
+      c.m=e.target.checked?c.m.concat(j).sort((a,b)=>a-b):c.m.filter(x=>x!==j);
+      if(c.rf>=0&&c.m.indexOf(c.rf)>=0){delete c.rf;delete c.rop;delete c.rval}
+      delete st.cb;cmLimits(c);TR.done=false;rebuild();
+    };
+    box.appendChild(l);
+  });
+  const sum=el('div','cmsum'),reach=el('div','cmls'),warn=el('div','dqn');
+  box.append(sum,reach,warn);
+  live.push(v=>{
+    const vals=c.m.map(j=>v['q'+j]),t=vals.reduce((a,x)=>a+x,0);
+    sum.textContent=c.m.length?'Сейчас: '+num2(t)+' мм = '+vals.map(num2).join(' + '):'';
+    let lo=0,hi=Infinity;c.m.forEach((j,n)=>{const s=st.dm[j],x=vals[n];if(x>0){lo=Math.max(lo,Math.min(s.mn,x)/x);hi=Math.min(hi,Math.max(s.mx,x)/x)}});
+    reach.textContent=c.m.length>1&&isFinite(hi)?'Пределы входящих размеров позволяют от '+num2(t*lo)+' до '+num2(t*hi):'';
+    const over=c.m.some(a=>c.m.some(b=>{if(a>=b)return false;const x=st.dm[a],y=st.dm[b];return x.sk&&y.sk&&x.d.some((v,k)=>v!==0&&y.d[k]!==0)&&Math.max(x.sk[0],y.sk[0])<Math.min(x.sk[1],y.sk[1])}));
+    const same=c.m.some(a=>c.m.some(b=>a<b&&st.dm[a].g&&st.dm[a].g===st.dm[b].g&&Math.abs(v['q'+a]-v['q'+b])>.01));
+    warn.textContent=over?'Перекрывающиеся размеры: общий участок посчитается дважды':same?'Здесь размеры из одной группы синхронизации с разными значениями':'';
+    warn.hidden=!warn.textContent;
+  });
+  unitBlock(box,c);
+  capBlock(box,c,st.dm.map((x,j)=>j).filter(j=>cmCan(j)&&c.m.indexOf(j)<0),()=>applyCmCap(i),v=>cmCap(st,c,dimVals(v)),c.mn,live);
+  groupBlocks(box,c,'c'+i);
+  const del=el('button','cmdel','✕ Удалить составной размер');del.type='button';del.onclick=()=>cmDelete(i);box.appendChild(del);
+  d.appendChild(box);
+}
+// кнопки под списком размеров
+function dimBar(parent){
+  const b=el('div','cmbar','<button type="button" id="cmAdd">＋ Составной размер</button>');
+  const add=b.firstChild;
+  add.disabled=st.dm.filter((s,j)=>cmCan(j)).length<2;add.onclick=cmAdd;
+  parent.appendChild(b);
+}
+function row(parent,p,onset){
+  const d=document.createElement('div');d.className='row'+(p.kind==='cm'?' cm':'')+(UI.off.has(p.key)?' off':'')+(UI.open.has(p.key)?' open':'');d.dataset.key=p.key;
+  d.innerHTML='<div class="h'+(p.kind==='sc'?' t':'')+'">'+(viewer?'':'<input type="checkbox" class="chk conv-only" data-tip="Показывать ползунок на сайте">')+(viewer?'<span class="lt"></span>':'<input class="lt" type="text" spellcheck="false">')+'<input type="number" step="0.1" min="0.1"></div><input type="range" step="0.05">';
+  const lt=d.querySelector('.lt'),num=d.querySelector('input[type=number]'),rg=d.querySelector('input[type=range]'),chk=d.querySelector('.chk');
+  if(viewer)lt.textContent=labText(p,'ru');else lt.value=labText(p,labLang);
+  rg.min=p.min;rg.max=p.max;
+  if(!viewer){
+    // перестановка карточек: за ручку или стрелками
+    const h=el('span','mvh','⠿');h.dataset.tip='Перетащите карточку выше или ниже';
+    d.querySelector('.h').prepend(h);h.addEventListener('pointerdown',e=>dragRow(e,d));
+    const line=el('div','rgl');rg.replaceWith(line);line.appendChild(rg);
+    [[-1,'▲','Переместить выше'],[1,'▼','Переместить ниже']].forEach(([dir,ch,tip])=>{
+      const b=el('button','mvb',ch);b.type='button';b.dataset.dir=dir;b.dataset.tip=tip;b.onclick=()=>moveRow(d,dir);line.appendChild(b);
+    });
+  }
+  rg.oninput=()=>onset(+rg.value);
+  num.onchange=()=>{const v=+num.value;if(v>0)onset(v);else syncUI()};
+  if(!viewer){
+    chk.checked=!UI.off.has(p.key);
+    chk.onchange=()=>{if(chk.checked)UI.off.delete(p.key);else UI.off.add(p.key);d.classList.toggle('off',!chk.checked);syncPre()};
+    lt.oninput=()=>{fitLt(lt);TR.done=false;const v=lt.value.trim();if(v&&v!==p.lab[labLang])UI.lab[labLang][p.key]=v;else delete UI.lab[labLang][p.key];if(p.kind==='dq'||p.kind==='cm')syncUI()};
+  }
+  if(!viewer&&p.kind==='dq'){
+    const x=document.createElement('div');x.className='dqx';
+    const sp=st.dm[p.i];
+    x.innerHTML='<span>от</span><input type="number" step="any" class="mn"><span>до</span><input type="number" step="any" class="mx">'+(sp.t==='D'?'':'<select class="an"><option value="0">'+(sp.t==='A'?'сторона 1 неподвижна':'точка 1 неподвижна')+'</option><option value="1">'+(sp.t==='A'?'сторона 2 неподвижна':'точка 2 неподвижна')+'</option><option value="2">от центра</option></select>');
+    const mn=x.querySelector('.mn'),mx=x.querySelector('.mx'),an=x.querySelector('.an');
+    // пределы можно задавать в мм или в процентах от исходного размера
+    const pct=sp.t!=='A'&&sp.lm==='pct',k=pct?100/sp.v0:1;
+    mn.value=+(sp.mn*k).toFixed(2);mx.value=+(sp.mx*k).toFixed(2);if(an)an.value=sp.an;
+    if(pct)mx.after(el('span','','%'));
+    const upd=()=>{const s2=st.dm[p.i],a=+mn.value/k,b=+mx.value/k;if((s2.t==='L'?isFinite(a):a>0)&&b>a){s2.mn=Math.min(a,s2.v0);s2.mx=Math.max(b,s2.v0)}if(!s2.sk)geoSet(g,st,p.key,st.dv[p.i]);else{const c=geoVals(g,st)[p.key];if(c!==undefined&&(c<s2.mn-1e-6||c>s2.mx+1e-6))geoSet(g,st,p.key,c)}mn.value=+(s2.mn*k).toFixed(2);mx.value=+(s2.mx*k).toFixed(2);delete st.cb;if(UI.open.size)rebuild();else refresh()};
+    mn.onchange=mx.onchange=upd;
+    if(an)an.onchange=()=>{st.dm[p.i].an=+an.value;refresh()};
+    d.appendChild(x);
+  }
+  // замок: размер меняется только своим ползунком (только для размеров, привязанных к каркасу)
+  let kcb=null,pcb=null,nt=null;
+  if(p.kind==='dq'&&st.dm[p.i].sk){
+    const k=document.createElement('label');k.className='dqk';
+    k.dataset.tip='Замок: другие размеры его не изменят. Меняют только свой ползунок и ползунки своей группы (синхронизация или пропорция)';
+    k.innerHTML='<input type="checkbox"><span>🔒</span>';
+    kcb=k.querySelector('input');
+    kcb.onchange=()=>{dmLock(st,p.i,kcb.checked);refresh()};
+    nt=document.createElement('div');nt.className='dqn';nt.hidden=true;nt.textContent='Не двигается: мешает замок или фиксатор центра на другом размере';
+    d.querySelector('.h').insertBefore(k,lt);d.appendChild(nt);
+    const f=document.createElement('label');f.className='dqp';
+    f.dataset.tip='Фиксатор центра: центр размера остаётся на своём месте. Вместе с 🔒 размер не меняется ни в цифрах, ни в положении';
+    f.innerHTML='<input type="checkbox"><span>🎯</span>';
+    pcb=f.querySelector('input');
+    pcb.onchange=()=>{dmPin(st,p.i,pcb.checked);refresh()};
+    d.querySelector('.h').insertBefore(f,lt);
+  }else if(p.kind==='dq'){
+    // размер без привязки к каркасу: квадратики есть, но недоступны — с пояснением, почему
+    const s=st.dm[p.i],ax=s.t==='L'&&s.d&&s.d.some(x=>Math.abs(x)>.9995);
+    const why=s.t==='D'?'У диаметра замка и фиксатора центра нет: он меняется вокруг своей оси.'
+      :s.t==='A'?'У угла замка и фиксатора центра нет.'
+      :!ax?'Наклонный размер (не вдоль осей X, Y, Z): замок 🔒 и фиксатор центра 🎯 работают только для размеров вдоль X, Y, Z, привязанных к каркасу. Чтобы они были, поставьте в редакторе размеров размер по оси (например, высоту по вертикали).'
+      :'Местный размер (меняет только свой участок, например дно кармана): замок 🔒 и фиксатор центра 🎯 работают только для размеров вдоль X, Y, Z, привязанных к каркасу целиком.';
+    [['dqk','🔒'],['dqp','🎯']].forEach(([c,ic])=>{const l=document.createElement('label');l.className=c+' na';l.dataset.tip=why;l.innerHTML='<input type="checkbox" disabled><span>'+ic+'</span>';d.querySelector('.h').insertBefore(l,lt)});
+  }
+  // составной размер: состав и границы; у входящих размеров пометка
+  let ml=null,inn=null;
+  if(p.kind==='cm'){
+    ml=document.createElement('div');ml.className='cmls';d.appendChild(ml);
+    nt=document.createElement('div');nt.className='dqn';nt.hidden=true;nt.textContent='Не двигается: мешает замок или фиксатор центра на другом размере';d.appendChild(nt);
+    if(!viewer){
+      const x=document.createElement('div');x.className='dqx';
+      x.innerHTML='<span>от</span><input type="number" step="any" class="mn"><span>до</span><input type="number" step="any" class="mx">';
+      const mn=x.querySelector('.mn'),mx=x.querySelector('.mx'),c=st.cm[p.i];
+      const s0=cmSum0(st,c),pct=c.lm==='pct'&&s0>0,k=pct?100/s0:1;
+      mn.value=+(c.mn*k).toFixed(2);mx.value=+(c.mx*k).toFixed(2);if(pct)mx.after(el('span','','%'));
+      mn.onchange=mx.onchange=()=>{const c2=st.cm[p.i],a=+mn.value/k,b=+mx.value/k;if(a>0&&b>a){const v=geoVals(g,st)[p.key];c2.mn=Math.min(a,v);c2.mx=Math.max(b,v);c2.u=1}mn.value=+(c2.mn*k).toFixed(2);mx.value=+(c2.mx*k).toFixed(2);delete st.cb;if(UI.open.size)rebuild();else refresh()};
+      d.appendChild(x);
+    }
+  }
+  if(p.kind==='dq'&&(st.cm||[]).some(c=>c.m.indexOf(p.i)>=0)){inn=document.createElement('div');inn.className='cmin';d.insertBefore(inn,d.children[1])}
+  const live=[];
+  if(!viewer&&(p.kind==='dq'||p.kind==='cm')){
+    gearBtn(d,p.key);
+    if(p.kind==='dq'){
+      if(UI.open.has(p.key))dimSettings(d,p.i,live);
+      else{const t=dimSummary(st.dm[p.i]);if(t){const q=el('div','dqs');q.textContent=t;d.appendChild(q)}}
+    }else if(UI.open.has(p.key)){cmSettings(d,p.i,live);d.lastChild.dataset.cm=1}
+    else{const t=dimSummary(st.cm[p.i]);if(t){const q=el('div','dqs');q.textContent=t;d.appendChild(q)}}
+  }
+  if(p.kind==='cm'&&st.cm[p.i].m.length<2){d.classList.add('inc');rg.disabled=num.disabled=true}
+  // один клик по свободному месту карточки — открыть или закрыть её настройки (как ⚙);
+  // при открытии размер появляется на модели, если размеры на модели включены
+  if(!viewer&&(p.kind==='dq'||p.kind==='cm'))d.addEventListener('click',e=>{
+    if(e.target!==d&&e.target.closest('input,button,select,textarea,label,.mvh,.dset,.dqx,.cmls'))return;
+    const op=!UI.open.has(p.key);
+    if(op)UI.open.add(p.key);else UI.open.delete(p.key);
+    if(op&&p.kind==='dq'&&DIM.on&&dimCan(p.i))DIM.show.add(p.key);
+    try{getSelection().removeAllRanges()}catch(_){}rebuild();
+  });
+  parent.appendChild(d);return {num,rg,p,kcb,pcb,nt,ml,inn,live};
+}
+// ---- порядок карточек (он же порядок ползунков на сайте) ----
+const rowsIn=box=>[...box.children].filter(x=>x.classList.contains('row'));
+function markEnds(){
+  document.querySelectorAll('#axes>.ax').forEach(box=>{const L=rowsIn(box);L.forEach((d,n)=>d.querySelectorAll('.mvb').forEach(b=>{b.disabled=+b.dataset.dir<0?n===0:n===L.length-1}))});
+}
+function saveOrder(){
+  const keys=[...$('axes').querySelectorAll('.row')].map(x=>x.dataset.key);
+  plist().forEach(p=>{if(keys.indexOf(p.key)<0)keys.push(p.key)});
+  st.ord=keys;markEnds();
+}
+function moveRow(d,dir){
+  const L=rowsIn(d.parentNode),o=L[L.indexOf(d)+dir];if(!o)return;
+  if(dir<0)o.before(d);else o.after(d);
+  saveOrder();d.scrollIntoView({block:'nearest'});
+}
+function dragRow(e,d){
+  e.preventDefault();d.classList.add('dragging');
+  const pn=$('panel'),move=ev=>{
+    const L=rowsIn(d.parentNode).filter(x=>x!==d),nx=L.find(x=>{const r=x.getBoundingClientRect();return ev.clientY<r.top+r.height/2});
+    if(nx){if(d.nextElementSibling!==nx)nx.before(d)}else if(L.length&&L[L.length-1].nextElementSibling!==d)L[L.length-1].after(d);
+    const r=pn.getBoundingClientRect();if(ev.clientY<r.top+40)pn.scrollTop-=14;else if(ev.clientY>r.bottom-40)pn.scrollTop+=14;
+  };
+  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);d.classList.remove('dragging');saveOrder()};
+  addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
+const _cv=document.createElement('canvas').getContext('2d');
+function fitLt(lt){
+  if(!lt||lt.tagName!=='INPUT')return;
+  const cs=getComputedStyle(lt);_cv.font=cs.fontWeight+' '+cs.fontSize+' '+cs.fontFamily;
+  lt.style.width=Math.ceil(_cv.measureText(lt.value||'').width+parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight)+6)+'px';
+}
+function fitAll(){document.querySelectorAll('.row.dq input.lt').forEach(fitLt)}
+function buildUI(){
+  const box=$('axes');box.innerHTML='';ROWS={};
+  const pl=plist();
+  // если тел несколько: общие размеры, затем отдельный блок для каждого тела
+  const bodies=[...new Set(pl.filter(p=>p.body).map(p=>p.body))].sort((x,y)=>x-y);
+  const blocks=st.dm&&st.dm.length?[[GROUPS[1][0],()=>true]]:bodies.length>1
+    ?[[GROUPS[0][0],p=>GROUPS[0][1].indexOf(p.kind)>=0]].concat(bodies.map(n=>['Деталь '+n,p=>p.body===n]),[['Прочее',p=>!p.body&&GROUPS[0][1].indexOf(p.kind)<0]])
+    :GROUPS.map(([t,kinds])=>[t,p=>kinds.indexOf(p.kind)>=0]);
+  blocks.forEach(([title,has])=>{
+    const items=pl.filter(p=>has(p)&&!(viewer&&UI.off.has(p.key)));
+    if(!items.length)return;
+    const gdiv=document.createElement('div');gdiv.className='ax'+(title!==GROUPS[0][0]?' sec':'');
+    if(title!==GROUPS[0][0]&&title!==GROUPS[1][0]){const tt=document.createElement('b');tt.textContent=title;gdiv.appendChild(tt)}
+    items.forEach(p=>{ROWS[p.key]=row(gdiv,p,v=>{geoSet(g,st,p.key,v);refresh()})});
+    if(!viewer&&st.dm&&st.dm.length&&title===GROUPS[1][0])dimBar(gdiv);
+    box.appendChild(gdiv);
+  });
+  markEnds();fitAll();syncPre();
+}
+// размеры, у которых есть фиксатор центра (привязаны к каркасу)
+const pinnable=()=>st&&st.sk&&st.dm?st.dm.map((s,i)=>s.sk?i:-1).filter(i=>i>=0):[];
+function syncTop(){
+  const a=$('allPin');if(!a)return;
+  const on=!viewer&&!!(st&&st.dm&&st.dm.length);$('pinBox').hidden=$('scBox').hidden=$('allGear').hidden=$('dimBox').hidden=!on;
+  if(!on)return;
+  dimSync();
+  const L=pinnable(),n=L.filter(i=>st.cp&&st.cp[i]!==undefined).length;
+  a.checked=n>0&&n===L.length;a.indeterminate=n>0&&n<L.length;a.disabled=!L.length;
+  $('allGear').disabled=!UI.open.size;
+  $('scOn').checked=st.dm.some(s=>s.sc);
+}
+if($('allPin')){
+  $('allPin').onchange=e=>{
+    const v=e.target.checked;
+    pinnable().forEach(i=>{if(!!(st.cp&&st.cp[i]!==undefined)!==v)dmPin(st,i,v)});
+    refresh();
+  };
+  $('allGear').onclick=()=>{UI.open.clear();rebuild()};
+  $('dimAll').onchange=e=>{DIM.on=e.target.checked;DIM.show.clear();if(DIM.on)dimKeys().forEach(k=>DIM.show.add(k));rebuild()};
+  $('scOn').onchange=e=>{const v=e.target.checked;st.dm.forEach(s=>{if(v)s.sc=1;else delete s.sc});if(v)UI.off.delete('sc');else st.U=1;delete st.cb;rebuild()};
+}
+// функции модели. Где функция стоит (st.fm[k]: в основных) и включена ли (st.ow), хранится в модели.
+// Включена в основных — уходит в редактор сайта. Включена в тестовых — только здесь: в файл пишется st.tx, а при открытии файла снова включается
+function fnList(){return [{k:'ow',ru:'Односторонняя связь',d:'Размер, который вырос вслед за другим (например, ширина за пазом), назад вслед за ним не сжимается, если между их гранями было расстояние. Если грань общая — размеры идут в обе стороны, как раньше.'}]}
+function fnOn(k){return k==='ow'?!!st.ow:!!(st.fn&&st.fn[k])}
+function fnSet(k,on){if(k==='ow')dmOw(st,on);delete st.cb}
+function syncFn(){
+  const box=$('fnBox');if(!box)return;
+  const show=!viewer&&!!(st&&st.dm&&st.sk&&st.dm.some(s=>s.sk));
+  box.hidden=!show;if(!show)return;
+  const L=fnList(),sig=L.map(f=>f.k+(st.fm&&st.fm[f.k]?1:0)).join();
+  if(box._sig!==sig){
+    box._sig=sig;
+    [['fnMain',true],['fnTest',false]].forEach(([id,main])=>{
+      const sec=$(id),l=sec.querySelector('.fnl');l.innerHTML='';
+      L.filter(f=>!!(st.fm&&st.fm[f.k])===main).forEach(f=>{
+        const r=el('div','fnrow'),lab=el('label','fnlab'),cb=el('input','fnck'),st1=el('span','fnst'),mv=el('button','fnmv');
+        r.dataset.fn=f.k;cb.type='checkbox';mv.type='button';
+        lab.appendChild(cb);lab.appendChild(el('b','',f.ru));
+        mv.textContent=main?'← в тестовые':'→ в основные';mv.dataset.tip=main?'Вернуть функцию в тестовые: в редактор сайта она передаваться не будет':'Сделать функцию основной: она будет передаваться в редактор сайта';
+        r.appendChild(lab);r.appendChild(st1);r.appendChild(mv);r.appendChild(el('div','fnd',f.d));
+        cb.onchange=()=>{fnSet(f.k,cb.checked);refresh()};
+        mv.onclick=()=>{st.fm=Object.assign({},st.fm);if(main)delete st.fm[f.k];else st.fm[f.k]=1;if(!Object.keys(st.fm).length)delete st.fm;syncFn()};
+        l.appendChild(r);
+      });
+      if(main)sec.hidden=!l.children.length;
+    });
+  }
+  L.forEach(f=>{
+    const r=box.querySelector('.fnrow[data-fn="'+f.k+'"]');if(!r)return;
+    const on=fnOn(f.k),main=!!(st.fm&&st.fm[f.k]);
+    r.querySelector('.fnck').checked=on;r.classList.toggle('on',on);
+    r.querySelector('.fnst').textContent=!on?'выключена':main?'включена · передаётся в редактор сайта':'включена · только в конвертере, в редактор сайта не передаётся';
+  });
+}
+const held=()=>Object.keys(st.lk||{}).length+Object.keys(st.cp||{}).length>0;
+function syncUI(){
+  syncTop();syncFn();
+  const vals=geoVals(g,st),pm={};plist().forEach(p=>{pm[p.key]=p});
+  for(const k in ROWS){
+    const e=ROWS[k],v=vals[k];
+    let rr=null;
+    if(pm[k]){rr=geoRange(g,st,pm[k]);e.rg.min=rr[0];e.rg.max=rr[1]}
+    if(e.kcb){const on=!!(st.lk&&st.lk[e.p.i]);e.kcb.checked=on;e.kcb.parentNode.classList.toggle('on',on);
+      const pin=!!(st.cp&&st.cp[e.p.i]!==undefined);e.pcb.checked=pin;e.pcb.parentNode.classList.toggle('on',pin);
+      const sa=e.rg.closest('.row').querySelector('select.an');if(sa){sa.disabled=pin;sa.value=String(pin?2:st.dm[e.p.i].an)}
+      e.nt.hidden=!(!on&&rr&&rr[1]-rr[0]<0.05&&held())}
+    if(e.ml||e.inn){
+      const L=viewer?'ru':labLang,nm=(key,s)=>UI.lab[L][key]||s.lab[L];
+      if(e.ml){const m=st.cm[e.p.i].m;e.ml.textContent=m.length<2?'Отметьте минимум два размера (кнопка ⚙)':'Меняет вместе: '+m.map(j=>nm('q'+j,st.dm[j])).join(' + ');
+        e.nt.hidden=!(m.length>1&&rr&&rr[1]-rr[0]<0.05&&held())}
+      if(e.inn)e.inn.textContent=st.cm.map((c,ci)=>c.m.indexOf(e.p.i)>=0?'⛓ Входит в составной размер «'+nm('c'+ci,c)+'»':'').filter(x=>x).join('\n');
+    }
+    if(e.live)e.live.forEach(f=>f(vals));
+    if(document.activeElement!==e.num)e.num.value=+v.toFixed(2);e.rg.value=v;
+  }
+}
+function setup(c,meta,off,lab){
+  canonC=c;G=geoDetect(c.U,c.I);
+  g=meta||geoMeta(G,null);
+  if(!meta){
+    g.st=geoState(G.holes.length,G.bosses.length,G.slopes.length);
+    dmNote='';
+    if(PEND&&PEND.ann&&PEND.ann.length){
+      const r=dmBuild(PEND.ann,PEND.k,G,c.U,c.I,PEND.sk,PEND.cm,PEND.ord);
+      if(r.dm.length){g.st.dm=r.dm;g.st.dv=r.dv;if(r.sk)g.st.sk=r.sk;if(r.cm.length)g.st.cm=r.cm;if(r.ord)g.st.ord=r.ord}
+      dmNote=(r.dm.length?'':' В файле нет подходящих размеров — использованы автоматические ползунки.')+(r.skipped.length?' Пропущено: '+r.skipped.join('; ')+'.':'');
+    }
+  }
+  st=JSON.parse(JSON.stringify(g.st));
+  if(!viewer&&st.tx&&st.tx.ow&&st.dm&&st.sk){st.ow=1;if(st.tx.rh)st.rh=st.tx.rh}
+  if(!viewer)delete st.tx;
+  while(st.hf.length<G.holes.length)st.hf.push(1);while(st.df.length<G.bosses.length)st.df.push(1);while(st.sf.length<G.slopes.length)st.sf.push(1);
+  UI.off=off?new Set(off):geoOff({geo:g});
+  UI.open=new Set();
+  if(!viewer&&st.dm)st.dm.forEach((s,i)=>{if(s.hid){delete s.hid;s.fol=1;UI.off.add('q'+i)}});
+  if(!viewer&&st.cm)st.cm.forEach((c,i)=>{if(c.hid){delete c.hid;c.fol=1;UI.off.add('c'+i)}});
+  UI.lab={ru:{},en:{},he:{}};DIM.show.clear();
+  if(lab)for(const k in lab)for(const l in lab[k])if(UI.lab[l])UI.lab[l][k]=lab[k][l];
+  buildNB();makeMesh();buildUI();$('drop').classList.add('hide');refresh(true);
+  if(!viewer){$('bd').hidden=false;$('tools').hidden=false}
+  if(window.ASSIST)ASSIST.seq++;
+}
+function view(){cam.position.set(rad*1.5,hgt*.6+rad*.5,rad*2);ctl.target.set(0,hgt/2,0);ctl.minDistance=Math.max(rad*.08,1);ctl.maxDistance=rad*25;ctl.update()}
+function clip(){const d=cam.position.distanceTo(ctl.target),nr=Math.max(d*.02,.05),fr=d*20+1000;if(Math.abs(cam.near-nr)>nr*.02||Math.abs(cam.far-fr)>fr*.02){cam.near=nr;cam.far=fr;cam.updateProjectionMatrix()}}
+function applyUnit(){
+  const k=+$('unit').value,thr=$('thr').checked;let c,note='';
+  if(baseIdx){ // HTML из FreeCAD: индексная сетка
+    const U=new Float32Array(baseIdx.U.length);for(let i=0;i<U.length;i++)U[i]=baseIdx.U[i]*k;
+    if(thr){const s=simplifyThreads(U,baseIdx.I);c=canon(expand(s.U,s.I));note=s.zones}else c=canon(expand(U,baseIdx.I));
+  }else{ // OBJ
+    const p=new Float32Array(baseRaw.length);
+    for(let i=0;i<p.length;i++)p[i]=baseRaw[i]*k;
+    if(thr){const w=weld(p),s=simplifyThreads(w.U,w.I);c=canon(expand(s.U,s.I));note=s.zones}else c=canon(p);
+  }
+  if(PEND)PEND.k=k;
+  setup(c);
+  $('msg').textContent=((dmNote?dmNote.trim()+' ':'')+(thr?(note?' Резьба упрощена: заменено зон — '+note+'.':' Резьба в модели не найдена.'):'')).trim();
+}
+// проект редактора размеров: сетка деталей + проставленные размеры
+function parseEditor(txt){
+  const m=/<script[^>]*id="__CAD_ANNOTATIONS_DATA__"[^>]*>([\s\S]*?)<\/script>/.exec(txt);
+  if(!m||!m[1].trim())return null;
+  const d=JSON.parse(m[1].replace(/<\\\//g,'</')),parts=d.parts||[];let n=0;
+  parts.forEach(q=>n+=q.positions.length);
+  const pos=new Float32Array(n);let o=0;
+  parts.forEach(q=>{pos.set(q.positions,o);o+=q.positions.length});
+  // выноски в список размеров не входят, поэтому номера ссылок пересчитываются
+  const all=d.annotations||[],map=[];let m2=0;all.forEach((a,i)=>{map[i]=a.type!=='callout'?m2++:-1});
+  const ann=all.filter(a=>a.type!=='callout').map(a=>typeof a.limRef==='number'&&a.limRef>=0?Object.assign({},a,{limRef:map[a.limRef]}):a);
+  const cm=(d.composites||[]).map(c=>Object.assign({},c,{members:(c.members||[]).map(i=>map[i]).filter(i=>i>=0),limRef:typeof c.limRef==='number'&&c.limRef>=0?map[c.limRef]:-1}));
+  const ord=(d.order||[]).map(x=>x[0]!=='a'?x:map[+x.slice(1)]>=0?'a'+map[+x.slice(1)]:'').filter(x=>x);
+  return {pos,ann,cm,ord,sk:d.skeleton||null,name:d.modelName||''};
+}
+// готовый файл модели, сохранённый этим конвертером: открываем снова со всеми настройками
+function parseModel(txt){
+  const m=/<script id="embed" type="application\/json">\s*(\{[\s\S]*?)<\/script>/.exec(txt);
+  if(!m)return null;
+  const e=JSON.parse(m[1]);return e&&e.geo&&e.pos?e:null;
+}
+function decodeModel(e){
+  const ub=b64dec(e.pos),ib=b64dec(e.idx);
+  const U=new Float32Array(ub.buffer,0,ub.byteLength/4);
+  const I=e.ib===4?new Uint32Array(ib.buffer,0,ib.byteLength/4):new Uint16Array(ib.buffer,0,ib.byteLength/2);
+  return {U,I,pos:expand(U,I),n:I.length/3};
+}
+function openModel(e,name){
+  fileName=e.src||name;PEND=null;baseRaw=null;baseIdx=null;dmNote='';TR.done=false;
+  const set=(ids,o)=>['ru','en','he'].forEach((l,i)=>{$(ids[i]).value=(o&&o[l])||''});
+  set(['nr','ne','nh'],e.name);set(['tr','te','th'],e.tag);set(['dr','de','dh'],e.desc);
+  $('bz').classList.toggle('on',!!e.z);$('bs').classList.toggle('on',!!e.s);
+  mat.color.set(e.color);$('col').value=e.color;
+  $('convBox').hidden=false;$('thrBox').hidden=false;
+  setup(decodeModel(e),e.geo,[...geoOff(e)],e.ui&&e.ui.lab);
+  baseLock(true);
+  $('msg').textContent='Открыта готовая модель: настройки сохранены. «Единицы» и «Упростить резьбу» меняются только при загрузке исходного файла.';
+}
+function baseLock(on){$('unit').disabled=on;$('thr').disabled=on}
+function load(file){
+  if(!file||viewer)return;
+  const isHtml=/\.html?$/i.test(file.name),rd=new FileReader();
+  $('info').textContent='Читаю файл '+file.name+'…';
+  rd.onload=()=>setTimeout(()=>{try{
+      const mdl=isHtml?parseModel(rd.result):null;
+      if(mdl){openModel(mdl,file.name);return}
+      baseLock(false);
+      const prj=isHtml?parseEditor(rd.result):null;
+      const p=prj?{pos:prj.pos,n:prj.pos.length/9}:isHtml?parseFreeCAD(rd.result):parseOBJ(rd.result);if(!p.n)throw 0;
+      TR.done=false;fileName=file.name;PEND=prj&&prj.ann.length?{ann:prj.ann,sk:prj.sk,cm:prj.cm,ord:prj.ord,k:1}:null;
+      if(prj){baseRaw=p.pos;baseIdx=null;$('unit').value='1'}
+      else if(isHtml){baseIdx={U:p.U,I:p.I};baseRaw=null;$('unit').value='1'}else{baseRaw=p.pos;baseIdx=null}
+      const base=file.name.replace(/\.[^.]+$/,'');
+      $('nr').value=$('ne').value=$('nh').value=base;
+      $('convBox').hidden=false;$('thrBox').hidden=false;
+      $('info').textContent='Обработка модели…';
+      setTimeout(applyUnit,30);
+    }catch(e){console.error(e);$('info').textContent='Не удалось прочитать файл '+file.name+' как OBJ или HTML-экспорт FreeCAD'}},20);
+  rd.readAsText(file);
+}
+$('f').onchange=e=>{load(e.target.files[0]);e.target.value=''};
+addEventListener('dragover',e=>{e.preventDefault();if(!viewer)$('over').classList.add('show')});
+addEventListener('dragleave',e=>{if(!e.relatedTarget)$('over').classList.remove('show')});
+addEventListener('drop',e=>{e.preventDefault();$('over').classList.remove('show');load(e.dataTransfer.files[0])});
+$('unit').onchange=()=>{if(baseRaw||baseIdx)applyUnit()};
+$('thr').onchange=()=>{if(baseRaw||baseIdx)applyUnit()};
+document.querySelectorAll('#tools [data-ll]').forEach(b=>b.onclick=()=>{
+  labLang=b.dataset.ll;document.querySelectorAll('#tools [data-ll]').forEach(x=>x.classList.toggle('on',x===b));buildUI();syncUI();
+});
+const totOff=()=>new Set(plist().filter(p=>p.kind!=='sc'&&p.kind!=='ax').map(p=>p.key));
+const defOff=()=>new Set((st.dm||[]).map((s,i)=>s.fol?'q'+i:'').concat((st.cm||[]).map((c,i)=>c.fol?'c'+i:'')).filter(x=>x));
+const same=(a,b)=>a.size===b.size&&[...b].every(k=>a.has(k));
+function syncPre(){
+  if(!g||!$('allOn'))return;
+  const t=totOff();
+  $('allOn').checked=UI.off.size===0||same(UI.off,defOff());
+  $('onlyTot').checked=same(UI.off,t);
+}
+$('allOn').onchange=()=>{UI.off=$('allOn').checked?defOff():totOff();buildUI();syncUI()};
+$('onlyTot').onchange=()=>{UI.off=$('onlyTot').checked?totOff():new Set();buildUI();syncUI()};
+$('bz').onclick=()=>{$('bz').classList.toggle('on');refresh(true)};
+$('bs').onclick=()=>{$('bs').classList.toggle('on');buildNB();refresh()};
+$('bw').onclick=()=>{mat.wireframe=!mat.wireframe;$('bw').classList.toggle('on',mat.wireframe)};
+$('br').onclick=()=>{ctl.autoRotate=!ctl.autoRotate;$('br').classList.toggle('on',ctl.autoRotate)};
+$('col').oninput=e=>mat.color.set(e.target.value);
+$('bv').onclick=view;
+$('rs').onclick=()=>{if(!canonC)return;const keep=st.dm,ksk=st.sk,klk=st.lk,kcm=st.cm,kcp=st.cp,kord=st.ord,kow=st.ow,kfm=st.fm;st=geoState(G.holes.length,G.bosses.length,G.slopes.length);if(keep){st.dm=keep;st.dv=keep.map(q=>q.v0);st.sk=ksk;if(klk)st.lk=klk;if(kcm)st.cm=kcm;if(kcp){st.cp=Object.assign({},kcp);dmPinReset(st)}}if(kord)st.ord=kord;if(kow)st.ow=kow;if(kfm)st.fm=kfm;refresh()};
+cv.addEventListener('pointerdown',()=>{ctl.autoRotate=false;$('br').classList.remove('on')});
+
+// миниатюра для каталога сайта (серая «карта освещения»: на сайте перекрашивается в цвет модели)
+function makeThumb(){
+  try{
+    const S=240,c2=document.createElement('canvas');c2.width=c2.height=S;
+    const r2=new THREE.WebGLRenderer({canvas:c2,antialias:true,alpha:true,preserveDrawingBuffer:true});
+    r2.setPixelRatio(1);r2.setSize(S,S,false);
+    const s2=new THREE.Scene(),k2=new THREE.PerspectiveCamera(32,1,.5,1e5);
+    s2.add(new THREE.HemisphereLight(0xffffff,0x667788,.9));
+    const l1=new THREE.DirectionalLight(0xffffff,1);l1.position.set(1,1.6,1.2);s2.add(l1);
+    const l2=new THREE.DirectionalLight(0xffffff,.35);l2.position.set(-1,.3,-1);s2.add(l2);
+    s2.add(new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:0xd7d7d7,metalness:.1,roughness:.55,side:THREE.DoubleSide})));
+    geo.computeBoundingBox();geo.computeBoundingSphere();
+    const ctr=geo.boundingBox.getCenter(new THREE.Vector3()),rr=geo.boundingSphere.radius||1;
+    const dir=new THREE.Vector3(1,.8,1).normalize(),dist=rr/Math.sin(k2.fov*Math.PI/360)*1.05;
+    k2.position.copy(ctr).addScaledVector(dir,dist);k2.lookAt(ctr);k2.near=dist*.05;k2.far=dist*10;k2.updateProjectionMatrix();
+    r2.render(s2,k2);
+    let url=c2.toDataURL('image/webp',.88);if(url.indexOf('data:image/webp')!==0)url=c2.toDataURL('image/png');
+    r2.dispose();if(r2.forceContextLoss)r2.forceContextLoss();
+    return url;
+  }catch(e){return ''}
+}
+function download(name,text){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:'text/html;charset=utf-8'}));
+  a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+// собрать файл модели для сайта без скачивания: { name, html }
+function buildModel(){
+  const base=fileName.replace(/\.[^.]+$/,'');
+  const meta=JSON.parse(JSON.stringify({...g,st}));
+  if(meta.st.ow&&!(meta.st.fm&&meta.st.fm.ow)){meta.st.tx=Object.assign({},meta.st.tx,{ow:1});if(meta.st.rh)meta.st.tx.rh=meta.st.rh;delete meta.st.ow;delete meta.st.rh}
+  if(!meta.st.ow)delete meta.st.rh;
+  let off=UI.off,ulab=UI.lab,dropped=0;
+  if(meta.st.cm){
+    const map=[];let n=0;meta.st.cm.forEach((c,i)=>{map[i]=c.m.length>1?n++:-1});
+    dropped=meta.st.cm.length-n;
+    if(dropped){const r=cmRemap(map,off,ulab);off=r.off;ulab=r.lab;if(meta.st.ord)meta.st.ord=meta.st.ord.map(r.mv).filter(x=>x);meta.st.cm=meta.st.cm.filter(c=>c.m.length>1)}
+    if(!meta.st.cm.length)delete meta.st.cm;
+    delete meta.st.cb;
+  }
+  const params=geoParams(meta);
+  const lab={};params.forEach(p=>{['ru','en','he'].forEach(l=>{const v=ulab[l][p.key];if(v&&v!==p.lab[l]){(lab[p.key]=lab[p.key]||{})[l]=v}})});
+  const keys=new Set(params.map(p=>p.key));
+  const entry=buildEntryGeo({
+    id:slug(fileName),
+    name:{ru:$('nr').value.trim()||base,en:$('ne').value.trim()||base,he:$('nh').value.trim()||base},
+    tag:{ru:$('tr').value.trim(),en:$('te').value.trim(),he:$('th').value.trim()},
+    desc:{ru:$('dr').value.trim(),en:$('de').value.trim(),he:$('dh').value.trim()},
+    color:'#'+mat.color.getHexString(),z:$('bz').classList.contains('on'),s:$('bs').classList.contains('on'),
+    src:fileName,canon:canonC,geo:meta,thumb:makeThumb(),
+    ui:{off:[...off].filter(k=>keys.has(k)),lab,rg:{}}
+  });
+  const cl=document.documentElement.cloneNode(true);
+  // в файл модели не берём то, что нужно только при редактировании: подписи размеров на модели и подсветку карточек
+  cl.querySelectorAll('#dimOv').forEach(x=>x.remove());
+  cl.querySelectorAll('.flash-b,.flash-all').forEach(x=>x.classList.remove('flash-b','flash-all'));
+  cl.querySelector('#embed').textContent=JSON.stringify(entry).replace(/</g,'\\u003c');
+  cl.querySelector('body').className='viewer';
+  cl.querySelector('#axes').innerHTML='';cl.querySelector('#msg').textContent='';cl.querySelector('#info').textContent='';
+  cl.querySelector('#over').className='';cl.querySelector('#drop').className='hide';
+  cl.querySelector('title').textContent=entry.name.ru+' — 3D модель';
+  const html='<!DOCTYPE html>\n'+cl.outerHTML;
+  return {name:base+'-3d.html',html,dropped};
+}
+function doSave(){
+  if(!canonC||viewer){$('msg').textContent='Сначала загрузите модель';return}
+  const m=buildModel(),html=m.html,base=m.name.replace(/-3d\.html$/,''),dropped=m.dropped;
+  download(m.name,html);
+  $('msg').textContent='Готово: '+base+'-3d.html ('+Math.round(html.length/1024)+' КБ). Этот файл можно открыть отдельно, добавить на сайт через редактор или снова открыть здесь для изменения настроек.'+(dropped?' Составные размеры меньше чем из двух размеров не сохранены.':'');
+}
+// ---------- размеры на модели: стрелки и значения, как в редакторе размеров ----------
+// показываются по клику на карточку, скрываются галочкой «📏 Размер на модели» в открытой карточке или общей галочкой вверху.
+// Подпись тянется мышью: вдоль размера — место значения (st.dm[j].lt), поперёк — отступ от модели (st.dm[j].of).
+const DIM={on:true,show:new Set(),grp:null,ov:null,lab:{},near:{},src:null,size:1};
+const DEFN=[[0,-1,0],[-1,0,0],[-.7071,-.7071,0]];
+const dimCan=i=>!!(st&&st.dm&&st.dm[i]&&(st.dm[i].t==='L'||st.dm[i].t==='D'));
+const dimKeys=()=>(st&&st.dm?st.dm.map((s,j)=>j).filter(dimCan).map(j=>'q'+j):[]);
+function dimShow(key,on){if(on&&!DIM.on)return;if(on)DIM.show.add(key);else DIM.show.delete(key);dimDraw();syncTop()}
+// верхняя галочка — главный выключатель: снята — размеры на детали не появляются вообще; поставлена — видны все
+function dimSync(){const a=$('dimAll');if(!a)return;a.checked=DIM.on;a.indeterminate=false;a.disabled=!dimKeys().length}
+// модель → вид (так же, как геометрия в refresh)
+const toD=p=>{const q=XF.zu?[p[0],p[2],-p[1]]:p;return new THREE.Vector3(q[0]-XF.cx,q[1]-XF.y0,q[2]-XF.cz)};
+const toDv=p=>{const q=XF.zu?[p[0],p[2],-p[1]]:p;return new THREE.Vector3(q[0],q[1],q[2])};
+const scr=v=>{const q=v.clone().project(cam);return [(q.x*.5+.5)*innerWidth,(-q.y*.5+.5)*innerHeight,q.z]};
+// вершина модели рядом с точкой: ближайшая и ближайшая на той же плоскости по оси ax — по их сдвигу двигаем размер
+function dimNear(P,ax){
+  const U=canonC.U,n=U.length/3,tl=DIM.size*1e-4+1e-4;let b=0,bd=1e30,bp=-1,bpd=1e30;
+  for(let i=0;i<n;i++){const dx=U[i*3]-P[0],dy=U[i*3+1]-P[1],dz=U[i*3+2]-P[2],d=dx*dx+dy*dy+dz*dz;if(d<bd){bd=d;b=i}if(ax>=0&&Math.abs(U[i*3+ax]-P[ax])<=tl&&d<bpd){bpd=d;bp=i}}
+  return [b,bp];
+}
+// концы размера сейчас (в координатах модели) и его значение
+function dimEnds(j){
+  if(DIM.src!==canonC){DIM.src=canonC;DIM.near={};const U=canonC.U;let m=0;for(let k=0;k<3;k++){let a=1e30,b=-1e30;for(let i=k;i<U.length;i+=3){if(U[i]<a)a=U[i];if(U[i]>b)b=U[i]}m=Math.max(m,b-a)}DIM.size=m||1}
+  const s=st.dm[j],U=canonC.U,v=geoVals(g,st)['q'+j];let P,dir,ax;
+  if(s.t==='L'){P=s.a;dir=s.d;ax=s.d.findIndex(x=>Math.abs(x)>.9995)}
+  else{P=[0,0,0];P[s.ax]=s.e[s.ax];P[s.u]=s.cu;P[s.v]=s.cv;dir=[0,0,0];dir[s.u]=s.e[s.u]-s.cu;dir[s.v]=s.e[s.v]-s.cv;const l=Math.hypot(...dir)||1;dir=dir.map(x=>x/l);ax=-1}
+  const nr=DIM.near[j]||(DIM.near[j]=dimNear(P,ax)),sh=(i,k)=>W[i*3+k]-U[i*3+k];
+  const P0=[0,1,2].map(k=>P[k]+(k===ax&&nr[1]>=0?sh(nr[1],k):sh(nr[0],k)));
+  if(s.t==='L')return {a:P0,b:P0.map((x,k)=>x+dir[k]*v),dir,v,ax};
+  return {a:P0.map((x,k)=>x-dir[k]*v/2),b:P0.map((x,k)=>x+dir[k]*v/2),dir,v,ax:-1};
+}
+function dimInit(){
+  if(DIM.grp)return;
+  DIM.grp=new THREE.Group();sc.add(DIM.grp);
+  DIM.ov=document.createElement('div');DIM.ov.id='dimOv';$('c').after(DIM.ov);
+}
+const dimFmt=v=>String(Math.round(v*100)/100);
+function dimDraw(){
+  if(viewer||!canonC||!XF)return;
+  dimInit();
+  while(DIM.grp.children.length){const c=DIM.grp.children.pop();if(c.geometry&&c.geometry.dispose)c.geometry.dispose()}
+  if(!DIM.on)DIM.show.clear();
+  Object.keys(DIM.lab).forEach(k=>{if(!DIM.show.has(k)||!dimCan(+k.slice(1))){DIM.lab[k].el.remove();delete DIM.lab[k]}});
+  DIM.show.forEach(key=>{
+    const j=+key.slice(1);if(!dimCan(j))return;
+    const s=st.dm[j],E=dimEnds(j),col=s.col||'#f59e0b',t=typeof s.lt==='number'?s.lt:.5;
+    const A=toD(E.a),B=toD(E.b),lin=s.t==='L';
+    const n=lin?toDv(s.nv||DEFN[E.ax>=0?E.ax:0]).normalize():new THREE.Vector3();
+    const of=lin?(isFinite(s.of)?s.of:DIM.size*.08):0;
+    const Ao=A.clone().addScaledVector(n,of),Bo=B.clone().addScaledVector(n,of),at=x=>Ao.clone().lerp(Bo,x);
+    const seg=[at(Math.min(0,t)),at(Math.max(1,t))];
+    if(lin&&of){const ov=n.clone().multiplyScalar(Math.sign(of)*Math.min(Math.abs(of)*.25,DIM.size*.02));seg.push(A,Ao.clone().add(ov),B,Bo.clone().add(ov))}
+    const u=Bo.clone().sub(Ao),L=u.length();
+    if(L>1e-6){
+      u.divideScalar(L);let sd=n.lengthSq()>0?n.clone():new THREE.Vector3(0,1,0);
+      if(Math.abs(sd.dot(u))>.9)sd=new THREE.Vector3(1,0,0);
+      const z=Math.min(L*.25,Math.max(DIM.size*.025,.4));
+      [[Ao,1],[Bo,-1]].forEach(([p,sg])=>[1,-1].forEach(w=>seg.push(p.clone(),p.clone().addScaledVector(u,z*sg).addScaledVector(sd,z*.35*w))));
+    }
+    const m=new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(seg),new THREE.LineBasicMaterial({color:col,depthTest:false,transparent:true}));
+    m.renderOrder=900;DIM.grp.add(m);
+    const lb=DIM.lab[key]||(DIM.lab[key]={el:dimLabel(key)});
+    Object.assign(lb,{pos:at(t),a:Ao,b:Bo,n,of,t,lin});
+    lb.el.style.borderColor=col;lb.el.textContent=(lin?'':'Ø')+dimFmt(E.v)+' мм';
+  });
+  dimPlace();
+}
+function dimPlace(){
+  for(const k in DIM.lab){const L=DIM.lab[k];if(!L.pos)continue;const p=scr(L.pos);
+    if(p[2]>1){L.el.style.display='none';continue}
+    L.el.style.display='block';L.el.style.left=p[0]+'px';L.el.style.top=p[1]+'px'}
+}
+// подпись: клик — к карточке размера; перетаскивание — вдоль размера и от модели
+function dimLabel(key){
+  const e=document.createElement('div');e.className='dlab';e.dataset.key=key;
+  e.title='Клик — перейти к карточке. Потяните: вдоль размера — переместить значение, поперёк — отодвинуть размер от модели';
+  e.addEventListener('pointerdown',ev=>{
+    if(ev.button!==0)return;ev.stopPropagation();ev.preventDefault();
+    const L=DIM.lab[key],s=st.dm[+key.slice(1)],t0=L.t,o0=L.of,p0=scr(L.pos),pT=scr(L.a.clone().lerp(L.b,t0+1)),pO=scr(L.pos.clone().add(L.n));
+    const tx=pT[0]-p0[0],ty=pT[1]-p0[1],ox=pO[0]-p0[0],oy=pO[1]-p0[1],det=tx*oy-ty*ox,sx=ev.clientX,sy=ev.clientY;let moved=false;
+    try{e.setPointerCapture(ev.pointerId)}catch(_){}
+    const mv=m=>{
+      const mx=m.clientX-sx,my=m.clientY-sy;if(!moved&&Math.hypot(mx,my)<4)return;moved=true;
+      let dt,dof=0;
+      if(L.lin&&Math.abs(det)>1e-6){dt=(mx*oy-my*ox)/det;dof=(tx*my-ty*mx)/det}else{const dd=tx*tx+ty*ty;dt=dd>1e-6?(mx*tx+my*ty)/dd:0}
+      s.lt=Math.max(-.5,Math.min(1.5,Math.round((t0+dt)*1000)/1000));
+      if(L.lin)s.of=Math.round((o0+dof)*10)/10;
+      dimDraw();
+    };
+    const up=()=>{e.removeEventListener('pointermove',mv);e.removeEventListener('pointerup',up);e.removeEventListener('pointercancel',up);
+      if(moved)return;const now=Date.now(),L2=DIM.lab[key];
+      if(L2&&L2.last&&now-L2.last<450){L2.last=0;dimGo(key,true)}else{if(L2)L2.last=now;dimGo(key,false)}};
+    e.addEventListener('pointermove',mv);e.addEventListener('pointerup',up);e.addEventListener('pointercancel',up);
+  });
+  DIM.ov.appendChild(e);return e;
+}
+// перейти к карточке размера: список плавно прокручивается, чтобы карточка встала в центр;
+// full=false — подсветить рамку, full=true — открыть карточку и подсветить её целиком
+function dimGo(key,full){
+  if(full&&!UI.open.has(key)){UI.open.add(key);rebuild()}
+  const R=ROWS[key];if(!R)return;const d=R.rg.closest('.row'),pn=$('panel');
+  document.querySelectorAll('#axes .row.flash-b,#axes .row.flash-all').forEach(x=>x.classList.remove('flash-b','flash-all'));
+  requestAnimationFrame(()=>{const r=d.getBoundingClientRect(),pr=pn.getBoundingClientRect();
+    pn.scrollTo({top:Math.max(0,pn.scrollTop+(r.top-pr.top)-(pn.clientHeight-r.height)/2),behavior:'smooth'})});
+  d.classList.add(full?'flash-all':'flash-b');
+  clearTimeout(dimGo.t);dimGo.t=setTimeout(()=>d.classList.remove('flash-b','flash-all'),1800);
+}
+// ---------- ассистент: автоматическая настройка ползунков ----------
+// правила: одинаковые участки на одной оси (стенки с стенками, карманы с карманами, одно значение) — группа синхронизации,
+// виден один ползунок группы; стенки и пол под замком (толщина не меняется), карманы и габариты меняются;
+// габарит скрыт, если все участки его оси под замком; пределы от размера детали; самопроверка ползунков
+// ось размера: у линейного — направление, у диаметра — ось отверстия, у угла (и косого линейного) оси нет: -1
+function dimAx(s){if(s&&s.t==='D')return isFinite(s.ax)?s.ax:-1;return s&&Array.isArray(s.d)?s.d.findIndex(x=>x!==0):-1}
+function asAutomate(){
+  if(!canonC||viewer)return {ok:false,msg:'Сначала откройте модель'};
+  if(!st.dm||!st.dm.length||!st.sk)return {ok:false,msg:'В модели нет размеров — сначала шаг 1 (размеры)'};
+  const n=st.sk.s.map(a=>a.length-1),fx=st.sk.f||[[],[],[]];
+  const info=st.dm.map((s,j)=>{const ax=dimAx(s),k=s.sk||[];
+    return {j,key:'q'+j,ax,lin:s.t==='L'&&!!s.sk,over:!!s.sk&&k[0]===0&&k[1]===n[ax],single:!!s.sk&&k[1]===k[0]+1,wall:!!s.sk&&k[1]===k[0]+1&&fx[ax][k[0]]===1}});
+  const rep={groups:0,locked:0,hidden:0,limits:0,tightened:0,checked:0,bad:[]};
+  // группы синхронизации
+  const used=new Set(items().map(x=>x.s.gn).filter(Boolean)),base=t=>String(t).replace(/\s+\d+$/,''),bk=new Map();
+  info.filter(x=>x.lin&&x.single&&!x.over&&!st.dm[x.j].g).forEach(x=>{const k=x.ax+'|'+(x.wall?'w':'f')+'|'+(+st.dm[x.j].v0).toFixed(2);(bk.get(k)||bk.set(k,[]).get(k)).push(x)});
+  bk.forEach(L=>{
+    if(L.length<2)return;
+    const cnt={};L.forEach(x=>{const b=base(dimName(x.j));cnt[b]=(cnt[b]||0)+1});
+    const nm=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];let q=nm,c=2;while(used.has(q))q=nm+' '+(c++);used.add(q);
+    setGroup(L[0].key,'g','new');const id=st.dm[L[0].j].g;st.dm[L[0].j].gn=q;
+    L.slice(1).forEach(x=>setGroup(x.key,'g',id));rep.groups++;
+  });
+  // замки на стенках
+  info.filter(x=>x.wall).forEach(x=>{if(!(st.lk&&st.lk[x.j])){dmLock(st,x.j,true);rep.locked++}});
+  // видимость: ведомые скрыты, остальные видны; габарит скрыт, если вся его ось под замком
+  info.forEach(x=>{if(st.dm[x.j].fol)UI.off.add(x.key);else UI.off.delete(x.key)});
+  info.filter(x=>x.over&&!x.single).forEach(x=>{const L=info.filter(y=>y.single&&y.ax===x.ax);if(L.length&&L.every(y=>st.lk&&st.lk[y.j])){UI.off.add(x.key);rep.hidden++}});
+  // пределы
+  const fl=v=>Math.floor(v*10)/10,ce=v=>Math.ceil(v*10)/10;
+  info.filter(x=>x.lin).forEach(x=>{const s=st.dm[x.j],v=s.v0;s.mn=Math.max(.5,fl(v*.5));s.mx=ce(v*(x.over||x.wall?2:3));rep.limits++});
+  // местные размеры (дно кармана и т.п., без каркаса): нижний предел от размера, верхний — не дальше геометрического
+  st.dm.forEach((s,j)=>{if(s.t!=='L'||s.sk||!s.inw)return;const v=s.v0;s.mn=Math.max(.5,fl(v*.5));s.mx=Math.max(v,Math.min(s.mx,ce(v*3)));rep.limits++});
+  // самопроверка: каждый видимый ползунок в крайние положения, затем случайные шаги разными ползунками
+  const snap=JSON.stringify(st),keys=plist().filter(p=>p.kind==='dq'&&!UI.off.has(p.key)).map(p=>p.key);
+  const okNow=()=>{if(!geoOk(g,st))return false;const v=geoVals(g,st);if(!Object.values(v).every(isFinite))return false;geoApply(canonC.U,G,st,W);for(let i=0;i<W.length;i++)if(!isFinite(W[i]))return false;return true};
+  const lim={};
+  keys.forEach(k=>{const s=st.dm[+k.slice(1)];[s.mn,s.mx].forEach((v,e)=>{st=JSON.parse(snap);geoSet(g,st,k,v);rep.checked++;if(!okNow())rep.bad.push(dimName(+k.slice(1)));(lim[k]=lim[k]||[])[e]=geoVals(g,st)[k]})});
+  st=JSON.parse(snap);let seed=1;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+  for(let t=0;t<40&&keys.length;t++){const k=keys[Math.floor(rnd()*keys.length)],s=st.dm[+k.slice(1)];geoSet(g,st,k,s.mn+(s.mx-s.mn)*rnd());rep.checked++;if(!okNow()){rep.bad.push(dimName(+k.slice(1)));break}}
+  st=JSON.parse(snap);
+  // пределы габаритов — до того, куда ползунок реально доходит
+  info.filter(x=>x.over&&lim[x.key]).forEach(x=>{const s=st.dm[x.j],[a,b]=lim[x.key];let ch=0;if(a>s.mn+.05&&a<=s.v0){s.mn=fl(a);ch=1}if(b<s.mx-.05&&b>=s.v0){s.mx=ce(b);ch=1}rep.tightened+=ch});
+  rep.bad=[...new Set(rep.bad)];
+  delete st.cb;TR.done=false;rebuild();
+  return Object.assign({ok:true},rep);
+}
+function asStatus(){
+    if(!canonC)return {seq:ASSIST.seq,model:false,dims:0,params:[]};
+    const lk=st.lk||{};
+    return {seq:ASSIST.seq,model:true,name:fileName,dims:(st.dm||[]).length,params:plist().map(p=>{
+      const o={key:p.key,kind:p.kind,lab:labText(p,'ru'),vis:!UI.off.has(p.key)};
+      if(p.kind==='dq'){const s=st.dm[p.i];Object.assign(o,{lk:!!lk[p.i],g:s.g||0,gn:s.gn||'',mn:s.mn,mx:s.mx,v0:s.v0,ax:dimAx(s)})}
+      return o})};
+}
+// ошибки конвертера запоминаются — ассистент покажет их, если файл не открылся
+addEventListener('error',e=>{if(window.ASSIST)ASSIST.errors.push(String(e.message||e.error||'ошибка'))});
+addEventListener('unhandledrejection',e=>{if(window.ASSIST)ASSIST.errors.push(String((e.reason&&e.reason.message)||e.reason||'ошибка'))});
+window.ASSIST={seq:0,errors:[],
+  loadFile:f=>{try{load(f)}catch(e){ASSIST.errors.push(String(e&&e.message||e))}},
+  // состояние читается всегда, даже если внутри что-то сломано
+  status:()=>{try{return asStatus()}catch(e){return {seq:ASSIST.seq,model:false,dims:0,params:[],error:String(e&&e.message||e)}}},
+  model:()=>canonC&&!viewer?buildModel():null,
+  automate:()=>asAutomate(),
+  save:()=>$('bd').click(),
+  // отпечаток состояния: изменилось ли что-то в конвертере с последней загрузки или сохранения
+  sig:()=>canonC?JSON.stringify([st,[...UI.off].sort(),UI.lab,['nr','ne','nh','tr','te','th','dr','de','dh','col'].map(id=>$(id)?$(id).value:'')]):'',
+  // размеры на модели: ключ, место подписи, текст, центр подписи и концы размерной линии на экране
+  dims:()=>Object.keys(DIM.lab).filter(k=>DIM.show.has(k)).map(k=>{const L=DIM.lab[k],r=L.el.getBoundingClientRect(),A=scr(L.a),B=scr(L.b);
+    return {key:k,t:L.t,text:L.el.textContent,x:r.left+r.width/2,y:r.top+r.height/2,ax:A[0],ay:A[1],bx:B[0],by:B[1],lines:DIM.grp?DIM.grp.children.length:0}})
+};
+// ---------- автоперевод названий (RU → EN, HE) с окном проверки ----------
+const TRD={'диаметр':['Diameter','קוטר'],'внешний диаметр':['Outer diameter','קוטר חיצוני'],'наружный диаметр':['Outer diameter','קוטר חיצוני'],'внутренний диаметр':['Inner diameter','קוטר פנימי'],'длина':['Length','אורך'],'ширина':['Width','רוחב'],'высота':['Height','גובה'],'глубина':['Depth','עומק'],'толщина':['Thickness','עובי'],'толщина стенки':['Wall thickness','עובי דופן'],'отверстие':['Hole','חור'],'резьба':['Thread','הברגה'],'радиус':['Radius','רדיוס'],'угол':['Angle','זווית'],'размер':['Dimension','מידה'],'масштаб':['Scale','קנה מידה'],'крышка':['Lid','מכסה'],'корпус':['Body','גוף'],'коробка':['Box','קופסה'],'карман':['Pocket','כיס'],'паз':['Slot','חריץ'],'шаг':['Pitch','פסיעה'],'дно':['Bottom','תחתית'],'стенка':['Wall','דופן'],'зазор':['Clearance','מרווח'],'модель':['Model','דגם'],'круглая':['Round','עגולה'],'круглый':['Round','עגול'],'внутренний':['Inner','פנימי'],'внешний':['Outer','חיצוני'],'наружный':['Outer','חיצוני'],'крышки':['of the lid','של המכסה'],'корпуса':['of the body','של הגוף'],'ширина паза':['Slot width','רוחב חריץ'],'глубина кармана':['Pocket depth','עומק כיס'],'высота крышки':['Lid height','גובה מכסה'],'высота корпуса':['Body height','גובה גוף']};
+const hasCyr=t=>/[А-Яа-яЁё]/.test(t||'');
+function dictTr(t,lang){
+  const i=lang==='en'?0:1,k=t.trim().toLowerCase();
+  if(TRD[k])return TRD[k][i];
+  const r=t.trim().split(/\s+/).map(x=>{const d=TRD[x.toLowerCase()];return d?d[i]:x}).join(' ');
+  return lang==='en'&&r?r[0].toUpperCase()+r.slice(1):r;
+}
+async function netTr(t,lang){
+  try{
+    const c=new AbortController(),to=setTimeout(()=>c.abort(),7000);
+    const rs=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t)+'&langpair=ru|'+lang,{signal:c.signal});clearTimeout(to);
+    const j=await rs.json(),x=j&&j.responseData&&j.responseData.translatedText;
+    if(x&&!/MYMEMORY|INVALID|QUERY LENGTH/i.test(x)&&!hasCyr(x))return x;
+  }catch(e){}
+  return '';
+}
+async function trText(t,lang){
+  if(!t||!hasCyr(t))return t||'';
+  const k=t.trim().toLowerCase();if(TRD[k])return TRD[k][lang==='en'?0:1];
+  return (await netTr(t,lang))||dictTr(t,lang);
+}
+async function openTr(){
+  const rows=[];
+  plist().filter(p=>!UI.off.has(p.key)&&!(p.kind==='cm'&&st.cm[p.i].m.length<2)).forEach(p=>rows.push({k:'p',key:p.key,p,title:'',v:{ru:labText(p,'ru'),en:labText(p,'en'),he:labText(p,'he')}}));
+  [['name','nr','ne','nh','Название модели'],['desc','dr','de','dh','Описание']].forEach(([t,a,b,c,ti])=>{
+    const v={ru:$(a).value.trim(),en:$(b).value.trim(),he:$(c).value.trim()};
+    if(v.ru)rows.push({k:'f',ids:[a,b,c],title:ti,name:t==='name',v});
+  });
+  const cs=getComputedStyle(document.body),bg=/rgba?\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)?'#16181d':cs.backgroundColor;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center';
+  const box=document.createElement('div');
+  box.style.cssText='background:'+bg+';color:'+cs.color+';border:1px solid #888;border-radius:14px;width:min(980px,96vw);max-height:88vh;overflow:auto;padding:16px;font-size:13px';
+  box.innerHTML='<b style="font-size:15px">Проверка перевода названий</b><div id="trSt" style="margin:6px 0 10px;opacity:.8">Перевожу…</div><table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left">RU</th><th style="text-align:left">EN</th><th style="text-align:right">HE</th></tr></thead><tbody></tbody></table><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="trCancel" type="button">Отмена</button><button id="trOk" type="button" style="font-weight:700">ОК — применить</button></div>';
+  const tb=box.querySelector('tbody');
+  rows.forEach(r=>{
+    const tr=document.createElement('tr');r.inp=[];
+    ['ru','en','he'].forEach(l=>{
+      const td=document.createElement('td'),i=document.createElement('input');
+      i.type='text';i.value=r.v[l];i.style.cssText='width:100%;box-sizing:border-box;margin:2px 0;padding:5px 7px';
+      if(l==='he'){i.dir='rtl'}
+      td.style.padding='0 4px';td.appendChild(i);tr.appendChild(td);r.inp.push(i);
+    });
+    tb.appendChild(tr);
+  });
+  ov.appendChild(box);document.body.appendChild(ov);
+  const close=()=>ov.remove();
+  box.querySelector('#trCancel').onclick=close;
+  box.querySelector('#trOk').onclick=()=>{
+    rows.forEach(r=>{
+      if(r.k==='p')['ru','en','he'].forEach((l,i)=>{const v=r.inp[i].value.trim();if(v&&v!==r.p.lab[l])UI.lab[l][r.key]=v;else delete UI.lab[l][r.key]});
+      else r.ids.forEach((id,i)=>{$(id).value=r.inp[i].value.trim()});
+    });
+    TR.done=true;close();buildUI();syncUI();
+    $('msg').textContent='Переводы применены. Нажмите «Скачать готовый HTML» ещё раз, чтобы сохранить файл.';
+  };
+  let n=0;const st2=box.querySelector('#trSt');
+  for(const r of rows){
+    const src=r.name?r.v.ru.replace(/[_]+/g,' '):r.v.ru;
+    for(const [i,l] of [[1,'en'],[2,'he']]){
+      if(r.v[l]&&r.v[l]!==r.v.ru)continue;
+      if(!hasCyr(src))continue;
+      st2.textContent='Перевожу… '+(++n);
+      r.inp[i].value=await trText(src,l);
+    }
+  }
+  st2.textContent='Проверьте и при необходимости исправьте переводы, затем нажмите ОК.';
+}
+$('bd').onclick=()=>{
+  if(!canonC||viewer){$('msg').textContent='Сначала загрузите модель';return}
+  if(!TR.done){openTr();return}
+  doSave();
+};
+
+
+// ---------- сворачиваемая карточка, изменение размера панели, подсказки ----------
+(function(){
+  let z=1;const pn=$('panel'),set=v=>{z=Math.max(.8,Math.min(1.6,Math.round(v*10)/10));pn.style.setProperty('--fz',z)};
+  $('fzm').onclick=()=>{set(z-.1);fitAll()};$('fzp').onclick=()=>{set(z+.1);fitAll()};
+})();
+$('dataHead').onclick=()=>{const c=$('convBox'),x=c.classList.toggle('collapsed');$('dataHead').setAttribute('aria-expanded',x?'false':'true')};
+(function(){
+  const root=document.documentElement,pn=$('panel'),rz=$('rz'),rm=$('rzm');
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function bind(h,move,reset){
+    h.addEventListener('pointerdown',e=>{h.setPointerCapture(e.pointerId);h.classList.add('drag');e.preventDefault()});
+    h.addEventListener('pointermove',e=>{if(h.classList.contains('drag'))move(e)});
+    const end=()=>h.classList.remove('drag');
+    h.addEventListener('pointerup',end);h.addEventListener('pointercancel',end);
+    h.addEventListener('dblclick',reset);
+  }
+  bind(rz,e=>root.style.setProperty('--pw',clamp(pn.getBoundingClientRect().right-e.clientX,240,Math.min(800,innerWidth-80))+'px'),()=>root.style.removeProperty('--pw'));
+  bind(rm,e=>root.style.setProperty('--ph',clamp(pn.getBoundingClientRect().bottom-e.clientY,120,innerHeight-110)+'px'),()=>root.style.removeProperty('--ph'));
+  const tip=$('tip');let tt=0;
+  function hide(){tip.style.display='none';clearTimeout(tt)}
+  document.addEventListener('pointerover',e=>{
+    const t=e.target.closest&&e.target.closest('[data-tip]');if(!t){return}
+    tip.textContent=t.dataset.tip;tip.style.display='block';
+    const r=t.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+    tip.style.left=clamp(r.left,8,innerWidth-w-8)+'px';
+    tip.style.top=(r.bottom+h+10>innerHeight?r.top-h-6:r.bottom+6)+'px';
+    clearTimeout(tt);if(e.pointerType!=='mouse')tt=setTimeout(hide,2800);
+  });
+  document.addEventListener('pointerout',e=>{const t=e.target.closest&&e.target.closest('[data-tip]');if(t&&e.pointerType==='mouse')hide()});
+})();
+function size(){r.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener('resize',size);size();
+// режим просмотра: файл уже содержит модель
+try{const t=$('embed').textContent.trim();if(t){
+  const e=JSON.parse(t);
+  if(!e.geo)throw new Error('Файл создан старой версией конвертера');
+  viewer=true;document.body.classList.add('viewer');
+  document.querySelectorAll('#dimOv').forEach(x=>x.remove()); // старые модели (v27–v30) могли сохранить подписи размеров
+  const c=decodeModel(e);
+  fileName=e.src||'';viewerName=e.name&&(e.name.ru||e.name.en||e.name.he)||fileName;
+  $('bz').classList.toggle('on',e.z);$('bs').classList.toggle('on',e.s);
+  mat.color.set(e.color);$('col').value=e.color;
+  setup(c,e.geo,[...geoOff(e)],e.ui&&e.ui.lab);
+}}catch(err){console.error(err)}
+(function loop(){requestAnimationFrame(loop);ctl.update();clip();r.render(sc,cam);dimPlace()})();
+</script></body></html>
